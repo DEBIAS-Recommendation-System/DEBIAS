@@ -23,7 +23,7 @@ If python3.10 is not on your PATH, install it before continuing. Using the syste
 
 ## Environment Configuration
 
-Copy the example below into `.env` (or edit the existing file). These values match the docker compose configuration.
+Copy the example below into `.env` (or edit the existing file). These values match the Docker Compose configuration.
 
 ```
 db_username=postgres
@@ -85,7 +85,7 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 ## Docker Compose
 
 1. Copy `.env` with the desired credentials (the bootstrap admin section is required).
-2. Build and start both services:
+2. Build and start both services from the repository root:
 
    ```bash
    docker compose up --build
@@ -96,8 +96,6 @@ On startup the app ensures an admin user exists using the admin_* values. Change
    - `fastapi-app` on http://127.0.0.1:8000/
    - `fastapi-postgres` on port 5432 (mapped to the host for optional psql access)
 
-   Leave this terminal running or add `-d` to run the stack in the background before proceeding.
-
 3. Apply database migrations inside the running app container:
 
    ```bash
@@ -105,8 +103,6 @@ On startup the app ensures an admin user exists using the admin_* values. Change
    ```
 
    The startup hook creates the default admin using the `.env` values if it does not already exist.
-
-   Docker compose overrides `db_hostname` to `db` so the API container connects to the Postgres service automatically—no need to edit `.env` for container runs.
 
 4. Stop everything when finished:
 
@@ -135,6 +131,5 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 - `ModuleNotFoundError` or missing wheels: confirm you activated the venv and that it was created with Python 3.10/3.11.
 - `pg_config executable not found`: ensure you are using psycopg2-binary via the supplied requirements and that the Postgres container is running.
 - `port 5432 already allocated`: stop other Postgres instances or change the published port in the docker compose file and in `.env`.
-- `Error starting userland proxy: listen tcp4 0.0.0.0:8000`: stop any local uvicorn/FastAPI process bound to port 8000 (for example one started with `venv/bin/python run.py`) or update the published port in docker compose.
 
 With these steps the project is ready to share and run without manual fixes.

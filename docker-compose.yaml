@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:15
+    container_name: fastapi-postgres
+    environment:
+      POSTGRES_USER: ${db_username:-postgres}
+      POSTGRES_PASSWORD: ${db_password:-postgres}
+      POSTGRES_DB: ${db_name:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${db_username:-postgres} -d ${db_name:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./Ecommerce-API
+      dockerfile: Dockerfile
+    container_name: fastapi-app
+    env_file:
+      - Ecommerce-API/.env
+    environment:
+      db_hostname: db
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+volumes:
+  postgres_data:
