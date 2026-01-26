@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     admin_email: str = "admin@example.com"
     admin_full_name: str = "Admin User"
 
+    # Qdrant Config
+    qdrant_host: str = "localhost"
+    qdrant_port: int = 6333
+    qdrant_api_key: str | None = None
+    qdrant_collection_name: str = "embeddings"
+
     class Config:
         env_file = ".env"
 
