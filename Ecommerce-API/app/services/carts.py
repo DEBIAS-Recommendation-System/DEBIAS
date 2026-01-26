@@ -37,11 +37,11 @@ class CartService:
             product_id = item_data['product_id']
             quantity = item_data['quantity']
 
-            product = db.query(Product).filter(Product.id == product_id).first()
+            product = db.query(Product).filter(Product.product_id == product_id).first()
             if not product:
                 return ResponseHandler.not_found_error("Product", product_id)
 
-            subtotal = quantity * product.price * (product.discount_percentage / 100)
+            subtotal = quantity * product.price
             cart_item = CartItem(product_id=product_id, quantity=quantity, subtotal=subtotal)
             total_amount += subtotal
 
@@ -68,11 +68,11 @@ class CartService:
             product_id = item.product_id
             quantity = item.quantity
 
-            product = db.query(Product).filter(Product.id == product_id).first()
+            product = db.query(Product).filter(Product.product_id == product_id).first()
             if not product:
                 return ResponseHandler.not_found_error("Product", product_id)
 
-            subtotal = quantity * product.price * (product.discount_percentage / 100)
+            subtotal = quantity * product.price
 
             cart_item = CartItem(
                 cart_id=cart_id,

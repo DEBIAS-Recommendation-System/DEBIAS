@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Float, ARRAY, Enum
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Float, Enum
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.orm import relationship
@@ -43,7 +43,7 @@ class CartItem(Base):
 
     id = Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True)
     cart_id = Column(Integer, ForeignKey("carts.id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False)
     quantity = Column(Integer, nullable=False)
     subtotal = Column(Float, nullable=False)
 
@@ -58,29 +58,18 @@ class Category(Base):
     id = Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)
 
-    # Relationship with products
-    products = relationship("Product", back_populates="category")
+    # Relationship with products removed (products no longer reference categories)
 
 
 class Product(Base):
     __tablename__ = "products"
 
-    id = Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True)
+    product_id = Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=False)
     title = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    price = Column(Integer, nullable=False)
-    discount_percentage = Column(Float, nullable=False)
-    rating = Column(Float, nullable=False)
-    stock = Column(Integer, nullable=False)
     brand = Column(String, nullable=False)
-    thumbnail = Column(String, nullable=False)
-    images = Column(ARRAY(String), nullable=False)
-    is_published = Column(Boolean, server_default="True", nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"), nullable=False)
-
-    # Relationship with category
-    category_id = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False)
-    category = relationship("Category", back_populates="products")
+    category = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    imgUrl = Column(String, nullable=False)
 
     # Relationship with cart items
     cart_items = relationship("CartItem", back_populates="product")

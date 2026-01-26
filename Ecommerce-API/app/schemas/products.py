@@ -1,7 +1,5 @@
-from pydantic import BaseModel, validator
-from datetime import datetime
-from typing import List, Optional, ClassVar
-from app.schemas.categories import CategoryBase
+from pydantic import BaseModel
+from typing import List, Optional
 
 
 # Base Models
@@ -10,27 +8,12 @@ class BaseConfig:
 
 
 class ProductBase(BaseModel):
-    id: int
+    product_id: int
     title: str
-    description: Optional[str]
-    price: int
-
-    @validator("discount_percentage", pre=True)
-    def validate_discount_percentage(cls, v):
-        if v < 0 or v > 100:
-            raise ValueError("discount_percentage must be between 0 and 100")
-        return v
-
-    discount_percentage: float
-    rating: float
-    stock: int
     brand: str
-    thumbnail: str
-    images: List[str]
-    is_published: bool
-    created_at: datetime
-    category_id: int
-    category: CategoryBase
+    category: str
+    price: float
+    imgUrl: str
 
     class Config(BaseConfig):
         pass
@@ -38,16 +21,20 @@ class ProductBase(BaseModel):
 
 # Create Product
 class ProductCreate(ProductBase):
-    id: ClassVar[int]
-    category: ClassVar[CategoryBase]
-
     class Config(BaseConfig):
         pass
 
 
 # Update Product
-class ProductUpdate(ProductCreate):
-    pass
+class ProductUpdate(BaseModel):
+    title: Optional[str] = None
+    brand: Optional[str] = None
+    category: Optional[str] = None
+    price: Optional[float] = None
+    imgUrl: Optional[str] = None
+
+    class Config(BaseConfig):
+        pass
 
 
 # Get Products
@@ -69,7 +56,7 @@ class ProductsOut(BaseModel):
 
 # Delete Product
 class ProductDelete(ProductBase):
-    category: ClassVar[CategoryBase]
+    pass
 
 
 class ProductOutDelete(BaseModel):

@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-from app.schemas.products import ProductBase, CategoryBase
+from app.schemas.products import ProductBase
 
 
 # Base Config
@@ -10,8 +10,6 @@ class BaseConfig:
 
 
 class ProductBaseCart(ProductBase):
-    category: CategoryBase = Field(exclude=True)
-
     class Config(BaseConfig):
         pass
 

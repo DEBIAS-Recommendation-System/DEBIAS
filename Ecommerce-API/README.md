@@ -23,24 +23,7 @@ If python3.10 is not on your PATH, install it before continuing. Using the syste
 
 ## Environment Configuration
 
-Copy the example below into `.env` (or edit the existing file). These values match the Docker Compose configuration.
-
-```
-db_username=postgres
-db_password=postgres
-db_hostname=localhost
-db_port=5432
-db_name=postgres
-
-secret_key=lzxecVmPgQIjhC0B12a0qMvWMPP1bL18
-algorithm=HS256
-access_token_expire_minutes=90
-
-# Admin bootstrap credentials (automatically created at app startup)
-admin_username=admin
-admin_password=admin
-admin_email=admin@example.com
-admin_full_name=Admin User
+Copy the `.env.example` into `.env`
 ```
 
 On startup the app ensures an admin user exists using the admin_* values. Change them before the first run if you want different defaults.
@@ -130,6 +113,3 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 
 - `ModuleNotFoundError` or missing wheels: confirm you activated the venv and that it was created with Python 3.10/3.11.
 - `pg_config executable not found`: ensure you are using psycopg2-binary via the supplied requirements and that the Postgres container is running.
-- `port 5432 already allocated`: stop other Postgres instances or change the published port in the docker compose file and in `.env`.
-
-With these steps the project is ready to share and run without manual fixes.

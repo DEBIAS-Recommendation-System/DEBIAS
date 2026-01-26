@@ -94,38 +94,63 @@ def run_smoke_tests() -> None:
 
     # Product endpoints
     product_payload = {
+        "product_id": 1001,
         "title": "Smartphone",
-        "description": "Latest model",
-        "price": 999,
-        "discount_percentage": 10.0,
-        "rating": 4.5,
-        "stock": 50,
         "brand": "TechCorp",
-        "thumbnail": "http://example.com/thumb.jpg",
-        "images": ["http://example.com/image1.jpg"],
-        "is_published": True,
-        "category_id": category_id,
-        "created_at": "2024-01-01T00:00:00Z",
+        "category": "electronics.phones",
+        "price": 999.0,
+        "imgUrl": "http://example.com/thumb.jpg",
     }
     product_create = client.post("/products/", json=product_payload, headers=auth_header)
     assert product_create.status_code == 201, product_create.text
-    product_id = product_create.json()["data"]["id"]
+    product_data = product_create.json()["data"]
+    product_id = product_data["product_id"]
+    assert product_data["product_id"] == product_payload["product_id"]
+    assert product_data["title"] == product_payload["title"]
+    assert product_data["brand"] == product_payload["brand"]
+    assert product_data["category"] == product_payload["category"]
+    assert float(product_data["price"]) == float(product_payload["price"])
+    assert product_data["imgUrl"] == product_payload["imgUrl"]
     print(f"Product created with id {product_id}")
 
     product_list = client.get("/products/")
     assert product_list.status_code == 200, product_list.text
+    list_data = product_list.json()["data"]
+    assert any(item["product_id"] == product_id for item in list_data)
     print("Products listed")
 
     product_detail = client.get(f"/products/{product_id}")
     assert product_detail.status_code == 200, product_detail.text
+    detail_data = product_detail.json()["data"]
+    assert detail_data["product_id"] == product_id
+    assert detail_data["title"] == product_payload["title"]
+    assert detail_data["brand"] == product_payload["brand"]
+    assert detail_data["category"] == product_payload["category"]
+    assert float(detail_data["price"]) == float(product_payload["price"])
+    assert detail_data["imgUrl"] == product_payload["imgUrl"]
     print("Product detail retrieved")
 
+    updated_product_payload = {
+        **product_payload,
+        "title": "Smartphone Pro",
+        "brand": "TechCorp Plus",
+        "category": "electronics.smartphones",
+        "price": 899.0,
+        "imgUrl": "http://example.com/thumb-updated.jpg",
+    }
     product_update = client.put(
         f"/products/{product_id}",
-        json={**product_payload, "price": 899},
+        json=updated_product_payload,
         headers=auth_header,
     )
     assert product_update.status_code == 200, product_update.text
+    updated_data = product_update.json()["data"]
+    assert updated_data["product_id"] == product_id
+    assert updated_data["title"] == updated_product_payload["title"]
+    assert updated_data["brand"] == updated_product_payload["brand"]
+    assert updated_data["category"] == updated_product_payload["category"]
+    assert float(updated_data["price"]) == float(updated_product_payload["price"])
+    assert updated_data["imgUrl"] == updated_product_payload["imgUrl"]
     print("Product updated")
 
     # Users endpoints
