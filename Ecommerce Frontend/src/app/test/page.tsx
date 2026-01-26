@@ -28,6 +28,8 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const [currentPage, setCurrentPage] = React.useState(1);
 

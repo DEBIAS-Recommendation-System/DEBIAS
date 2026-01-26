@@ -1,27 +1,20 @@
 "use server";
 
 import { slugify } from "@/helpers/slugify";
-import { createClient } from "@/lib/supabase";
+
+// Simulate async delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default async function slugifyProducts() {
-  const supabase = createClient();
-const { data: products } = await supabase.from("products").select("*");
-
-  if (!products) return;
-
-  type ProductRow = { id: string; title: string; slug: string | null };
-  for (const product of products as ProductRow[]) {
-    const newSlug = slugify(product.title);
-    if (product.slug === newSlug) continue;
-
-    const { error: updateError } = await supabase
-      .from("products")
-      .update({ slug: newSlug } as never)
-      .eq("id", product.id);
-
-    if (updateError) {
-      console.error(`Error updating slug for product ${product.id}:`, updateError);
-    }
-  }
-
+  // Simulate async operation with 300ms delay
+  await delay(300);
+  
+  // Lazy load products count only when needed
+  const { products: csvProducts } = await import('@/data/products.generated');
+  
+  // Note: Since we're using static CSV data, slugs are generated at build time
+  // This function is kept for compatibility but doesn't modify the CSV data
+  console.log(`Slugs already generated for ${csvProducts.length} products from CSV`);
+  
+  return { success: true, message: "Slugs are pre-generated from CSV data" };
 }

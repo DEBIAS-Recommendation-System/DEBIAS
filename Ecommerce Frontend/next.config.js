@@ -8,6 +8,25 @@ const nextConfig = {
       fullUrl: true,
     },
   },
+  // Performance optimizations
+  experimental: {
+    optimizePackageImports: ['@/components', '@/lib', '@/utils'],
+    turbo: {
+      resolveAlias: {
+        'stream': 'stream-browserify',
+      },
+    },
+  },
+  // Enable SWC minification for faster builds
+  swcMinify: true,
+  // Production optimizations
+  reactStrictMode: true,
+  // Reduce bundle size
+  modularizeImports: {
+    '@/components': {
+      transform: '@/components/{{member}}',
+    },
+  },
   images: {
     remotePatterns: [
       {
@@ -43,6 +62,11 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "cdn.pixabay.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "m.media-amazon.com",
         pathname: "/**",
       },
     ],

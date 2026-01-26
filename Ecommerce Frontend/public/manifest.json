@@ -1,33 +1,24 @@
 {
-  "name": "Softyhr",
-  "short_name": "Softyhr",
+  "name": "DEBIAS Shop - Online Marketplace",
+  "short_name": "DEBIAS Shop",
   "icons": [
     {
-      "src": "./icon.png",
-      "sizes": "128x128",
+      "src": "./logo/logo-2.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "prupuse": "any"
+      "purpose": "any"
     },
     {
-      "src": "./icon144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "prupuse": "any"
-    },
-    {
-      "src": "./icon384x384.png",
-      "sizes": "384x384",
-      "type": "image/png"
-    },
-    {
-      "src": "./icon512x512.png",
+      "src": "./logo/logo-2.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "theme_color": "#EBEBEB",
-  "background_color": "#EBEBEB",
+  "theme_color": "#FF9900",
+  "background_color": "#FFFFFF",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "description": "Your trusted online marketplace for electronics, clothing, home goods, and more"
 }

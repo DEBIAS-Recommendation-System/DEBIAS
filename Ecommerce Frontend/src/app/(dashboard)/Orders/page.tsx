@@ -2,6 +2,8 @@
 import useTranslation from "@/translation/useTranslation";
 import Content from "./ui/Content";
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const { data: translation } = useTranslation();
 

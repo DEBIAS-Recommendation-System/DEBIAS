@@ -1,55 +1,24 @@
-import { MdToys } from "react-icons/md";
-import { GiBrain } from "react-icons/gi";
-import { MdConstruction } from "react-icons/md";
 import { RiDiscountPercentFill } from "react-icons/ri";
-import { AiOutlineMenuUnfold } from "react-icons/ai";
+import { AiOutlineShop } from "react-icons/ai";
+import { MdCategory } from "react-icons/md";
 
 const menuItems = [
   {
-    title: "Sfari moments",
+    title: "All Products",
     href: "/products",
     icon: ({ className }: { className: string }) => (
-      <AiOutlineMenuUnfold className={className} />
+      <AiOutlineShop className={className} />
     ),
     subItems: [],
   },
   {
-    title: "Toys",
+    title: "Categories",
     href: "/products",
     icon: ({ className }: { className: string }) => (
-      <MdToys className={className} />
+      <MdCategory className={className} />
     ),
-    subItems: [
-      {
-        title: "Concentration",
-        filter: {
-          category: "concentration",
-        },
-        icon: ({ className }: { className: string }) => (
-          <GiBrain className={className} />
-        ),
-      },
-      {
-        title: "Social",
-        filter: {
-          category: "social",
-        },
-        icon: ({ className }: { className: string }) => (
-          <MdToys className={className} />
-        ),
-      },
-      {
-        title: "Construction",
-        filter: {
-          category: "construction",
-        },
-        icon: ({ className }: { className: string }) => (
-          <MdConstruction className={className} />
-        ),
-      },
-    ],
+    subItems: [],
   },
-
   {
     title: "Deals",
     href: "/products",
