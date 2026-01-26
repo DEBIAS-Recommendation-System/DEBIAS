@@ -1,0 +1,1 @@
+by calling this command, you run the whatever project you're in. after running it and scanning the output of the terminal, if there's any errors you stop the running code and fix the errors and keep fixing erros and running the code until there's no more errors

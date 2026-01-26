@@ -1,0 +1,33 @@
+{
+  "name": "Softyhr",
+  "short_name": "Softyhr",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "prupuse": "any"
+    },
+    {
+      "src": "./icon144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "prupuse": "any"
+    },
+    {
+      "src": "./icon384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#EBEBEB",
+  "background_color": "#EBEBEB",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

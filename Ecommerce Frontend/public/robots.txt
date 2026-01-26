@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://sfari-jouets.com/sitemap.xml
