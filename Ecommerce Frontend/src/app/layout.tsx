@@ -15,47 +15,52 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "Sfari Jouets | Jeux Éducatifs تونس - ألعاب تعليمية للأطفال",
+  title: "DEBIAS Shop - Your Trusted Online Marketplace",
   description:
-    "اكتشفوا مجموعة واسعة من الألعاب التعليمية في تونس مع Sfari Jouets. Jouets éducatifs pour enfants en Tunisie, qualité, apprentissage et développement garanti.",
+    "Discover thousands of products across all categories at DEBIAS Shop. From electronics to clothing, home goods to computers - shop with confidence and get the best deals online.",
   generator: "Next.js",
   manifest: "/manifest.json",
   keywords: [
-    "jeux éducatifs Tunisie",
-    "jouets éducatifs Tunisie",
-    "jouets enfants Tunisie",
-    "magasin jouets Tunisie",
-    "Montessori Tunisie",
-    "ألعاب تعليمية تونس",
-    "ألعاب أطفال تونس",
-    "ألعاب تعليمية للأطفال",
-    "متجر ألعاب تعليمية تونس",
+    "online shopping",
+    "ecommerce",
+    "marketplace",
+    "electronics",
+    "clothing",
+    "computers",
+    "appliances",
+    "best deals",
+    "online store",
+    "shopping online",
   ],
   authors: [
     {
-      name: "Sfari Jouets",
-      url: "https://sfari-jouets.com",
+      name: "DEBIAS Shop",
+      url: "https://debias-shop.com",
     },
   ],
+  icons: {
+    icon: "/logo/logo-2.png",
+    apple: "/logo/logo-2.png",
+  },
   openGraph: {
-    title: "Sfari Jouets | Jeux Éducatifs تونس - ألعاب تعليمية للأطفال",
+    title: "DEBIAS Shop - Your Trusted Online Marketplace",
     description:
-      "Sfari Jouets يقدم ألعاب تعليمية للأطفال في تونس بجودة عالية وأسعار مناسبة. Jouets éducatifs pour enfants en Tunisie.",
-    url: "https://sfari-jouets.com",
-    siteName: "Sfari Jouets",
+      "Shop thousands of products with confidence. Electronics, clothing, home goods, and more at competitive prices.",
+    url: "https://debias-shop.com",
+    siteName: "DEBIAS Shop",
     images: [
       {
-        url: "https://sfari-jouets.com/og-image.png",
+        url: "/logo/logo-2.png",
         width: 1200,
         height: 630,
-        alt: "Sfari Jouets - Jeux éducatifs et ألعاب تعليمية في تونس",
+        alt: "DEBIAS Shop - Online Marketplace",
       },
     ],
-    locale: "fr_FR",
+    locale: "en_US",
     type: "website",
   },
   alternates: {
-    canonical: "https://sfari-jouets.com",
+    canonical: "https://debias-shop.com",
   },
 };
 

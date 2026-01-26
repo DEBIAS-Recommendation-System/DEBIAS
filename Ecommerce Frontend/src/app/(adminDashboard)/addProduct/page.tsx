@@ -26,6 +26,8 @@ const schema = z.object({
   }),
 });
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const { toast } = useToast();
   const [preview, setPreview] = useState<string>("");

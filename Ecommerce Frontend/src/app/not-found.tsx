@@ -4,6 +4,8 @@ import NotFoundPanda from "/public/NotFound/NotFoundPanda.png";
 import Image from "next/image";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 function NotFound() {
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-start">

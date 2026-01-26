@@ -1,20 +1,24 @@
 "use server";
 
-import { createClient } from "@/lib/supabase";
+// Simulate async delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default async function getProductTitleAndWholesalePrice(productId : string) {
-  const supabase = createClient();
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("title, wholesale_price")
-    .eq("id" , productId)
-    .single()
-
-  if (error) {
-    return { error: error.message };
+  // Simulate async operation with 300ms delay
+  await delay(300);
+  
+  // Lazy load products only when needed
+  const { products: csvProducts } = await import('@/data/products.generated');
+  
+  const product = csvProducts.find(p => p.product_id === productId);
+  
+  if (!product) {
+    return { error: "Product not found" };
   }
-  const p = product as { title: string; wholesale_price: number } | null;
-  if (!p) return { error: "Product not found" };
-  return { title: p.title, wholesalePrice: p.wholesale_price };
+  
+  return { 
+    title: product.title, 
+    wholesalePrice: product.price_dec * 0.8 // 80% of retail price
+  };
 }
 

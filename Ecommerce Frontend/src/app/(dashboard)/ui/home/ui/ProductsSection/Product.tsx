@@ -20,7 +20,7 @@ export default function Product(product: Partial<IProduct>) {
         )}
         <Link href={`/products/${product.slug}`}>
           <Image
-            src={"/product/prod2.jpg"}
+            src={product.image_url || "/product/prod2.jpg"}
             alt={product.title || "Product image"}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

@@ -1,8 +1,10 @@
-import getData from "@/api/getData";
+import getProducts from "@/actions/products/getProducts";
+
 const productBySlugQuery = ({ slug }: { slug: string }) => ({
   queryKey: ["products", {slug}],
   queryFn: async () => {
-    return await getData<"products">({
+    // Use the CSV-based getProducts function with slug match
+    return await getProducts({
       tableName: "products",
       match: { slug },
     });

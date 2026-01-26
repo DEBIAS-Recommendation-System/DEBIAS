@@ -1,5 +1,7 @@
 import WishlistHydration from "@/provider/WishlistHydration";
 import Content from "./ui/Content";
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   return (
     <WishlistHydration>

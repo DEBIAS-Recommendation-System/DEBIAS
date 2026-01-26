@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Revenu from './ui/revenu';
 import LastYearIncome from './ui/lastYearIncome';
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   return (
     <div className='flex flex-col gap-5 w-[90%] max-w-[60rem] m-auto mt-10 md:mt-20'>

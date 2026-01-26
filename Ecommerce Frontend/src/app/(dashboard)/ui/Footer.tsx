@@ -30,19 +30,20 @@ export default function Footer() {
           />
           <div className="flex flex-col items-center gap-2 max-[470px]:gap-1">
             <div className="mb-2 text-xl font-bold max-[470px]:text-[1rem]">
-              Categories
+              {translation?.lang["Category"] || "Categories"}
             </div>
-            {menuItems
-              .find((e) => e.title === "Toys")
-              ?.subItems?.map((category, i) => (
-                <Link
-                  href={`/products?${category.filter}`}
-                  className="line-clamp-1 cursor-pointer leading-6 transition-all ease-linear hover:font-medium hover:text-slate-500 hover:underline max-[470px]:text-sm"
-                  key={i}
-                >
-                  {translation?.lang[category.title]}
-                </Link>
-              ))}
+            <Link
+              href="/products"
+              className="line-clamp-1 cursor-pointer leading-6 transition-all ease-linear hover:font-medium hover:text-slate-500 hover:underline max-[470px]:text-sm"
+            >
+              {translation?.lang["Products"] || "All Products"}
+            </Link>
+            <Link
+              href="/products"
+              className="line-clamp-1 cursor-pointer leading-6 transition-all ease-linear hover:font-medium hover:text-slate-500 hover:underline max-[470px]:text-sm"
+            >
+              {translation?.lang["Deals"] || "Deals"}
+            </Link>
           </div>
           <div className="max-[470px]:gap- flex flex-col items-center gap-2">
             <div className="mb-2 text-xl font-bold max-[470px]:text-[1rem]">
@@ -112,27 +113,7 @@ export default function Footer() {
       </div>
       
       {/* Attribution Section */}
-      <div dir={translation?.default_language ==="ar" ? "rtl" : "ltr"}  className="border-t border-gray-200 bg-gray-50 px-[2rem] py-4">
-        <div className="flex items-center justify-center">
-          <div className="group flex items-center gap-2 text-sm text-gray-600 transition-all duration-300 hover:text-gray-800">
-            <span>{translation?.lang["crafted with"]}</span>
-            <div className="relative">
-              <div className="h-4 w-4 animate-pulse text-red-500 transition-all duration-300 group-hover:scale-110">
-                ❤️
-              </div>
-            </div>
-            <span>{translation?.lang["by"]}</span>
-            <Link
-              href="https://evowave.dev"
-              target="_blank"
-              className="relative font-semibold text-slate-700 transition-all duration-300 hover:text-slate-900"
-            >
-              <span className="relative z-10">Evowave</span>
-              <div className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 group-hover:w-full"></div>
-            </Link>
-          </div>
-        </div>
-      </div>
+      
     </footer>
   );
 }

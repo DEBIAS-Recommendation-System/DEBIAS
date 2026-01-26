@@ -9,6 +9,8 @@ import getOldestOrder from "@/api/Orders/getOldestOrder";
 import { getLastDayOfMonth } from "@/helpers/getLastDayOfMonth";
 import { Player } from "@lottiefiles/react-lottie-player";
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const currentDate = new Date();
   const today = currentDate.getDate();

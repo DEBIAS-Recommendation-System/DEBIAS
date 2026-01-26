@@ -8,6 +8,8 @@ import {
 } from "./context/useProductsPagination";
 import { SearchIcon } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 function ProductListPage() {
   const [searchQuery, setSearchQuery] = useState<string>(""); // State for search query
   const { page, setPage } = useProductsPagination(); // Using the pagination context
