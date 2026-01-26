@@ -1,140 +1,89 @@
-# FastAPI E-commerce API
+# DEBIAS
+### Debiased E-commerce with Budget-Integrated Affordability Search
 
-Minimal FastAPI service that exposes product, category, cart, user, and auth endpoints backed by PostgreSQL.
 
-## Features at a Glance
+##  Overview
 
-- CRUD APIs for products and categories
-- JWT-based signup/login and account management
-- Cart operations scoped to the authenticated user
+**DEBIAS** is a context-aware FinCommerce engine that integrates multimodal product discovery with user-specific financial constraints. The system delivers real-time, constraint-aware search and personalized recommendations at scale.
 
-## Prerequisites
 
-- Python 3.10 (recommended) or Python 3.11. Dependencies in requirements.txt are not compatible with Python 3.12+.
-- Docker (for the local Postgres container)
-- Git
 
+## Problem Statement
+
+**Relevance Saturation Bias** occurs when:
+- Users stop interacting after finding any acceptable product
+- Lower-priced or better-value items receive less engagement
+- Ranking models learn position bias instead of true relevance
+
+
+
+##  How DEBIAS Works (High-Level)
+
+DEBIAS combines:
+- Semantic intent understanding
+- Budget-aware retrieval
+- Debiasing-aware re-ranking
+- Cold-start reasoning via product graphs
+
+Affordability is integrated before ranking—not applied afterward—ensuring fair exposure for items.
+
+---
+
+## Key Features
+
+- **Budget-Integrated Affordability Search**  
+  Interprets budgets dynamically using category-relative pricing (e.g., percentiles instead of fixed price caps).
+
+- **Debiased Ranking (DualIPW)**  
+  Corrects exposure bias so affordable products aren’t penalized by early user exits.
+
+- **Cold-Start Intelligence**  
+  Uses graph-based Hub Products to connect new users and items with no interaction history.
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|------|-----------|--------|
+| Frontend | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white) | Server-side rendered UI for product discovery |
+| Backend | ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white) | Async API for financial encoding & reranking |
+| Vector Search | ![Qdrant](https://img.shields.io/badge/Qdrant-FF4F00?style=for-the-badge&logo=qdrant&logoColor=white) | Hybrid vector + payload search |
+| Graph Database | ![Neo4j](https://img.shields.io/badge/Neo4j-008CC1?style=for-the-badge&logo=neo4j&logoColor=white) | Cold-start & hub-product traversal |
+| Relational DB | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white) | User profiles & product metadata |
+
+---
+
+## Setup & Run Instructions
+
+### Prerequisites
+- Docker & Docker Compose
+- Node.js v18+
+- Python v3.9+
+
+---
+
+### Clone the Repository
 ```bash
-python3.10 --version          # confirm Python 3.10 is available
-docker --version              # confirm Docker is available
+git clone https://github.com/your-org/debias.git
+cd debias
+
+docker-compose up -d
+
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+cd frontend
+npm install
+npm run dev
 ```
+## Team
 
-If python3.10 is not on your PATH, install it before continuing. Using the system default (for example Python 3.12/3.14) will fail when creating the virtual environment and installing the pinned dependencies.
-
-## Environment Configuration
-
-Copy the example below into `.env` (or edit the existing file). These values match the docker compose configuration.
-
-```
-db_username=postgres
-db_password=postgres
-db_hostname=localhost
-db_port=5432
-db_name=postgres
-
-secret_key=lzxecVmPgQIjhC0B12a0qMvWMPP1bL18
-algorithm=HS256
-access_token_expire_minutes=90
-
-# Admin bootstrap credentials (automatically created at app startup)
-admin_username=admin
-admin_password=admin
-admin_email=admin@example.com
-admin_full_name=Admin User
-```
-
-On startup the app ensures an admin user exists using the admin_* values. Change them before the first run if you want different defaults.
-
-## Local Setup
-
-1. **Create the virtual environment with Python 3.10**
-
-   ```bash
-   python3.10 -m venv venv
-   source venv/bin/activate
-   python -m pip install --upgrade pip
-   python -m pip install -r requirements.txt
-   ```
-
-2. **Apply database migrations**
-
-   ```bash
-   venv/bin/python migrate.py
-   ```
-
-3. **Run the API**
-
-   ```bash
-   venv/bin/python run.py
-   ```
-
-   Visit:
-
-   - API root: http://127.0.0.1:8000/
-   - Swagger UI: http://127.0.0.1:8000/docs
-   - ReDoc: http://127.0.0.1:8000/redoc
-
-4. **Verify everything works (optional smoke test)**
-
-   ```bash
-   venv/bin/python tests/api_smoke_test.py
-   ```
-
-   The script clears the schema, seeds data, exercises every endpoint, and prints progress to the terminal.
-
-## Docker Compose
-
-1. Copy `.env` with the desired credentials (the bootstrap admin section is required).
-2. Build and start both services:
-
-   ```bash
-   docker compose up --build
-   ```
-
-   This launches:
-
-   - `fastapi-app` on http://127.0.0.1:8000/
-   - `fastapi-postgres` on port 5432 (mapped to the host for optional psql access)
-
-   Leave this terminal running or add `-d` to run the stack in the background before proceeding.
-
-3. Apply database migrations inside the running app container:
-
-   ```bash
-   docker compose exec app python migrate.py
-   ```
-
-   The startup hook creates the default admin using the `.env` values if it does not already exist.
-
-   Docker compose overrides `db_hostname` to `db` so the API container connects to the Postgres service automatically—no need to edit `.env` for container runs.
-
-4. Stop everything when finished:
-
-   ```bash
-   docker compose down
-   ```
-
-## Basic Usage
-
-- Admin credentials (auto-created):
-  - username: `admin`
-  - password: `admin`
-  - email: `admin@example.com`
-- Obtain tokens:
-
-  ```bash
-  curl -X POST http://127.0.0.1:8000/auth/login \
-    -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username=admin&password=admin"
-  ```
-
-  Use the returned `access_token` in `Authorization: Bearer <token>` headers for protected endpoints.
-
-## Troubleshooting
-
-- `ModuleNotFoundError` or missing wheels: confirm you activated the venv and that it was created with Python 3.10/3.11.
-- `pg_config executable not found`: ensure you are using psycopg2-binary via the supplied requirements and that the Postgres container is running.
-- `port 5432 already allocated`: stop other Postgres instances or change the published port in the docker compose file and in `.env`.
-- `Error starting userland proxy: listen tcp4 0.0.0.0:8000`: stop any local uvicorn/FastAPI process bound to port 8000 (for example one started with `venv/bin/python run.py`) or update the published port in docker compose.
-
-With these steps the project is ready to share and run without manual fixes.
+- Youssef Abid  
+- Ala Eddine Zaouali  
+- Adem Saidi  
+- Noursine Amira  
+- Younes Abbes 
