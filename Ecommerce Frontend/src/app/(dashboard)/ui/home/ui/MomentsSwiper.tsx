@@ -51,25 +51,39 @@ export default function MomentsSwiper() {
     },
   ];
   return (
-    <div className="flex w-full flex-col gap-6 bg-gray-100 px-4 pb-10 pt-6 text-center">
-      <span  dir={translation?.default_language ==="ar" ? "rtl" : "ltr"} className="text-[2rem] font-semibold text-slate-800 max-[830px]:text-[1.5rem] max-[530px]:text-[1rem]">
-        {translation?.lang["Every moment is important. Choose your own!"]}
-      </span>
-      <div className="mx-auto max-w-[75vw] max-[500px]:max-w-[90vw]">
+    <section className="bg-gradient-to-b from-slate-50 to-white px-6 py-16" aria-labelledby="moments-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto mb-12 max-w-3xl text-center">
+          <h2 
+            id="moments-heading"
+            dir={translation?.default_language ==="ar" ? "rtl" : "ltr"} 
+            className="mb-3 text-4xl font-bold text-slate-900 max-[830px]:text-3xl max-[530px]:text-2xl"
+          >
+            {translation?.lang["Every moment is important. Choose your own!"]}
+          </h2>
+          <p className="text-lg text-slate-600">
+            Discover products for every special occasion
+          </p>
+        </div>
         <CustomSwiper
           slidesPerView={4}
-          spaceBetween={25}
+          spaceBetween={20}
           breakpoints={{
             0: {
               slidesPerView: 1,
-              spaceBetween: 10,
+              spaceBetween: 12,
             },
             600: {
               slidesPerView: 2,
+              spaceBetween: 16,
+            },
+            1024: {
+              slidesPerView: 3,
               spaceBetween: 20,
             },
-            1200: {
+            1280: {
               slidesPerView: 4,
+              spaceBetween: 20,
             },
           }}
           loop
@@ -77,14 +91,20 @@ export default function MomentsSwiper() {
           slides={moments.map((e, i) => (
             <div
               key={i}
-              className={`flex h-[8rem] flex-row items-center justify-center gap-4 rounded-lg max-[600px]:h-[6rem] ${e.bg} p-6`}
+              className={`group relative h-full overflow-hidden rounded-xl border border-opacity-20 ${e.bg} p-8 transition-all duration-300 hover:shadow-xl max-[600px]:p-6`}
             >
-              <span className="text-lg font-bold text-white">{e.title}</span>
-              {e.icon}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative flex h-full flex-col items-center justify-center gap-4 text-center">
+                <div className="rounded-full bg-white/70 p-4 transition-transform duration-300 group-hover:scale-110" aria-hidden="true">
+                  {e.icon}
+                </div>
+                <h3 className="text-lg font-bold text-white">{e.title}</h3>
+              </div>
             </div>
           ))}
         />
       </div>
-    </div>
+      
+    </section>
   );
 }

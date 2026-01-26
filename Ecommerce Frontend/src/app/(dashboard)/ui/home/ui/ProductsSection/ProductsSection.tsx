@@ -35,42 +35,51 @@ export function ProductsSection() {
   }, [page, products?.meta?.has_next_page, sort, queryClient]);
   const { data: translation } = useTranslation();
   return (
-    <div className="my-20 flex min-h-screen flex-col gap-12">
-      <div className="flex flex-row items-center justify-center gap-3">
-        <Image
-          src="/home/icons/flower_yellow.png"
-          alt=""
-          height={15}
-          width={15}
-        />
-        <div className="text-2xl font-bold uppercase text-color5">
-          {translation?.lang["our products"]}
+    <section className="px-6 py-20" aria-labelledby="products-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 flex flex-row items-center justify-center gap-3">
+          <Image
+            src="/home/icons/flower_yellow.png"
+            alt=""
+            height={15}
+            width={15}
+          />
+          <h2 
+            id="products-heading"
+            className="text-4xl font-bold uppercase text-color5 max-[830px]:text-3xl max-[530px]:text-2xl"
+          >
+            {translation?.lang["our products"]}
+          </h2>
+          <Image
+            src="/home/icons/flower_yellow.png"
+            alt=""
+            height={15}
+            width={15}
+          />
         </div>
-        <Image
-          src="/home/icons/flower_yellow.png"
-          alt=""
-          height={15}
-          width={15}
-        />
+        <div className="mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 mb-12" />
+        {isLoading ? (
+          <div className="flex h-full w-full items-center justify-center min-h-[400px]">
+            <Loading />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {products?.data?.map((product, key) => (
+              <Product key={key} {...product} />
+            ))}
+          </div>
+        )}
+        <div className="mt-12 flex justify-center">
+          <Pagination
+            count={products?.meta?.total_pages}
+            page={page}
+            boundaryCount={1}
+            onChange={(e, value) => setPage(value)}
+            color="primary"
+            size="large"
+          />
+        </div>
       </div>
-      {isLoading ? (
-        <div className="h-full w-full items-center justify-center">
-          <Loading />
-        </div>
-      ) : (
-        <div className="mx-auto grid min-h-screen w-fit grid-cols-4 gap-x-10 gap-y-10 max-[1150px]:grid-cols-3 max-[830px]:grid-cols-2">
-          {products?.data?.map((product, key) => (
-            <Product key={key} {...product} />
-          ))}
-        </div>
-      )}
-      <Pagination
-        className="flex w-full justify-center"
-        count={products.meta?.total_pages}
-        page={page}
-        boundaryCount={1}
-        onChange={(e, value) => setPage(value)}
-      />
-    </div>
+    </section>
   );
 }

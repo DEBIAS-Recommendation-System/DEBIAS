@@ -8,24 +8,23 @@ import { IProduct } from "@/types/database.tables.types";
 
 export default function Product(product: Partial<IProduct>) {
   return (
-    <div className="relative flex h-[25rem] w-[15rem] flex-col items-center justify-center gap-4 overflow-hidden max-[640px]:h-[17.5rem] max-[640px]:w-[10rem]">
-      <div className="group h-full w-full overflow-hidden rounded-md border transition-all ease-linear hover:backdrop-brightness-75">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+      <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50 md:h-72">
         {!!product.discount && (
-          <Image
-            src={"/home/icons/promo.png"}
-            alt=""
-            width={1000}
-            height={1000}
-            className=".preserve-3d absolute -left-[9px] -top-[10px] h-[6rem] w-[6rem] rounded-tl-lg border-t transition-all duration-200 ease-out group-hover:-left-[7px] group-hover:-top-[8px] group-hover:opacity-0"
-          />
+          <div 
+            className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-red-500 to-red-600 px-3 py-1 text-sm font-bold text-white shadow-lg z-10"
+            aria-label={`${product.discount}% discount`}
+          >
+            -{product.discount}%
+          </div>
         )}
         <Link href={`/products/${product.slug}`}>
           <Image
             src={"/product/prod2.jpg"}
-            alt=""
-            width={2000}
-            height={2000}
-            className=".preserve-3d h-full w-full cursor-pointer rounded-md object-scale-down transition-all ease-linear group-hover:scale-[120%] group-hover:brightness-75"
+            alt={product.title || "Product image"}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         </Link>
         <AddToCartBtn
@@ -33,31 +32,33 @@ export default function Product(product: Partial<IProduct>) {
           isInCart={product.isInCart}
           available={product.available}
         />
-      </div>
-      <div className="fle z-20 w-full flex-col items-center justify-center gap-6 text-lg">
         <WishlistHart
           product_id={product.id}
           isInWishlist={product.isInWishlist}
           variant="absolute"
         />
+      </div>
+      
+      <div className="flex flex-1 flex-col gap-3 p-4">
         <TooltipGeneric tip={product.title ?? ""}>
-          <span className="z-0 mr-9 line-clamp-1 text-left">
+          <h3 className="font-semibold text-slate-900 line-clamp-2">
             {product.title}
-          </span>
+          </h3>
         </TooltipGeneric>
-        <div className="flex flex-row items-center justify-start gap-4 max-[540px]:text-sm">
+        
+        <div className="flex items-center gap-2 text-sm">
           {!!product.discount && (
-            <span className="text-color8">
+            <span className="text-lg font-bold text-blue-600">
               {product.price_after_discount} TND
             </span>
           )}
           {!!product.discount ? (
-            <del>{product.price} TND</del>
+            <del className="text-sm text-slate-400">{product.price} TND</del>
           ) : (
-            <span>{product.price} TND</span>
+            <span className="text-lg font-bold text-slate-900">{product.price} TND</span>
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 }
