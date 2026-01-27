@@ -73,3 +73,14 @@ class Product(Base):
 
     # Relationship with cart items
     cart_items = relationship("CartItem", back_populates="product")
+
+
+class Event(Base):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True)
+    event_time = Column(TIMESTAMP(timezone=True), nullable=False)
+    event_type = Column(Enum("purchase", "cart", "view", name="event_type_enum"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, nullable=True)
+    user_session = Column(String, nullable=False)

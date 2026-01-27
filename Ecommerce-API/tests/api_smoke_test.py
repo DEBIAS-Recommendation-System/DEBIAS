@@ -8,8 +8,9 @@ if PROJECT_ROOT not in sys.path:
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db.database import Base, engine, SessionLocal
-from app.models.models import User
+from app.models.models import User, Event
 from typing import Dict, Any
+from datetime import datetime, timezone, timedelta
 
 
 client = TestClient(app)
@@ -42,7 +43,9 @@ def login_user(username: str, password: str) -> Dict[str, Any]:
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     assert response.status_code == 200, response.text
-    return response.json()
+    payload = response.json()
+    assert "session_id" in payload
+    return payload
 
 
 def refresh_token(refresh_token: str) -> Dict[str, Any]:
@@ -66,6 +69,7 @@ def run_smoke_tests() -> None:
     promote_user_to_admin(admin_payload["username"])
     print("Admin role granted")
     admin_tokens = login_user(admin_payload["username"], admin_payload["password"])
+    admin_session_id = admin_tokens["session_id"]
     print("Admin login successful")
 
     refreshed_tokens = refresh_token(admin_tokens["refresh_token"])
@@ -153,6 +157,37 @@ def run_smoke_tests() -> None:
     assert updated_data["imgUrl"] == updated_product_payload["imgUrl"]
     print("Product updated")
 
+    # Event endpoints
+    event_payload = {
+        "event_time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        "event_type": "view",
+        "product_id": product_id,
+        "user_session": admin_session_id,
+    }
+    event_create = client.post("/events/", json=event_payload, headers=auth_header)
+    assert event_create.status_code == 201, event_create.text
+    event_data = event_create.json()["data"]
+    assert event_data["event_type"] == event_payload["event_type"]
+    assert event_data["product_id"] == product_id
+    assert event_data["user_session"] == event_payload["user_session"]
+    assert event_data["user_id"] is not None
+    assert event_data["event_time"] == event_payload["event_time"]
+
+    anon_event_payload = {
+        "event_time": (datetime.now(timezone.utc) + timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S"),
+        "event_type": "cart",
+        "product_id": product_id,
+        "user_session": "session-anon-1",
+    }
+    anon_event_create = client.post("/events/", json=anon_event_payload)
+    assert anon_event_create.status_code == 201, anon_event_create.text
+    anon_event_data = anon_event_create.json()["data"]
+    assert anon_event_data["event_type"] == anon_event_payload["event_type"]
+    assert anon_event_data["product_id"] == product_id
+    assert anon_event_data["user_session"] == anon_event_payload["user_session"]
+    assert anon_event_data["user_id"] is None
+    assert anon_event_data["event_time"] == anon_event_payload["event_time"]
+
     # Users endpoints
     user_payload = {
         "full_name": "Customer User",
@@ -190,6 +225,7 @@ def run_smoke_tests() -> None:
 
     # Customer token for account and cart tests
     customer_tokens = login_user(user_payload["username"], user_payload["password"])
+    customer_session_id = customer_tokens["session_id"]
     customer_header = {"Authorization": f"Bearer {customer_tokens['access_token']}"}
     print("Customer login successful")
 
@@ -231,6 +267,31 @@ def run_smoke_tests() -> None:
     )
     assert cart_update.status_code == 200, cart_update.text
     print("Cart updated")
+
+    customer_event_payload = {
+        "event_time": (datetime.now(timezone.utc) + timedelta(seconds=2)).strftime("%Y-%m-%d %H:%M:%S"),
+        "event_type": "purchase",
+        "product_id": product_id,
+        "user_session": customer_session_id,
+    }
+    customer_event_create = client.post("/events/", json=customer_event_payload, headers=customer_header)
+    assert customer_event_create.status_code == 201, customer_event_create.text
+    customer_event_data = customer_event_create.json()["data"]
+    assert customer_event_data["event_type"] == customer_event_payload["event_type"]
+    assert customer_event_data["product_id"] == product_id
+    assert customer_event_data["user_session"] == customer_session_id
+    assert customer_event_data["user_id"] == customer_id
+    assert customer_event_data["event_time"] == customer_event_payload["event_time"]
+
+    with SessionLocal() as db:
+        stored_event = (
+            db.query(Event)
+            .filter(Event.product_id == product_id, Event.user_id == customer_id)
+            .order_by(Event.event_time.desc())
+            .first()
+        )
+        assert stored_event is not None
+        assert stored_event.user_session == customer_session_id
 
     cart_delete = client.delete(f"/carts/{cart_id}", headers=customer_header)
     assert cart_delete.status_code == 200, cart_delete.text

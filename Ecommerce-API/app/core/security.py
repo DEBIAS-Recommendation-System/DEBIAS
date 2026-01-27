@@ -1,6 +1,7 @@
 from fastapi.security.http import HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from uuid import uuid4
 from app.core.config import settings
 from jose import JWTError, jwt
 from app.schemas.auth import TokenResponse
@@ -29,7 +30,7 @@ def verify_password(plain_password, hashed_password):
 
 
 # Create Access & Refresh Token
-async def get_user_token(id: int, refresh_token=None):
+async def get_user_token(id: int, refresh_token=None, session_id: str | None = None):
     payload = {"id": id}
 
     access_token_expiry = timedelta(minutes=settings.access_token_expire_minutes)
@@ -42,6 +43,7 @@ async def get_user_token(id: int, refresh_token=None):
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
+        session_id=session_id or str(uuid4()),
         expires_in=access_token_expiry.seconds
     )
 
