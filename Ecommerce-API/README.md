@@ -65,6 +65,7 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 
    The script clears the schema, seeds data, exercises every endpoint, and prints progress to the terminal.
 
+
 ## Docker Compose
 
 1. Copy `.env` with the desired credentials (the bootstrap admin section is required).
@@ -115,8 +116,52 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 - `pg_config executable not found`: ensure you are using psycopg2-binary via the supplied requirements and that the Postgres container is running.
 
 
-you may start only the db by using 
-```docker compose DEBIAS/docker-compose.yaml up -d db```
+## Dev Quick Start (from repo root)
 
-and the app with 
-```cd DEBIAS/Ecommerce-API && venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload```
+1. **Prepare Python 3.10–3.11**
+
+2. **Install dependencies**
+
+   ```bash
+   cd DEBIAS/Ecommerce-API
+   python3.10 -m venv venv
+   source venv/bin/activate
+   python -m pip install --upgrade pip
+   python -m pip install -r requirements.txt
+   ```
+
+3. **Start only Postgres (Docker)**
+
+   ```bash
+   docker compose docker-compose.yaml up -d db
+   ```
+
+4. **Run the API locally (no Docker, hot reload)**
+
+   ```bash
+   cd Ecommerce-API && venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+5. **Run migrations, tests, and data load (as needed)**
+
+   ```bash
+   cd Ecommerce-API
+   venv/bin/python migrate.py
+   venv/bin/python tests/api_smoke_test.py
+   venv/bin/python populateDB.py
+   venv/bin/python tests/event_test.py
+   ```
+
+## DB Health Checks
+
+```bash
+docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "\dt"
+docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT COUNT(*) AS products_count FROM products;"
+docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT COUNT(*) AS events_count FROM events;"
+docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT event_type, product_id, user_id, user_session FROM events ORDER BY event_time DESC LIMIT 5;"
+docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT COUNT(*) AS users_count FROM users;"
+docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT COUNT(*) AS carts_count FROM carts;"
+docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT COUNT(*) AS cart_items_count FROM cart_items;"
+```
+
+   
