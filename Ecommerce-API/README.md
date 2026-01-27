@@ -113,3 +113,10 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 
 - `ModuleNotFoundError` or missing wheels: confirm you activated the venv and that it was created with Python 3.10/3.11.
 - `pg_config executable not found`: ensure you are using psycopg2-binary via the supplied requirements and that the Postgres container is running.
+
+
+you may start only the db by using 
+```docker compose DEBIAS/docker-compose.yaml up -d db```
+
+and the app with 
+```cd DEBIAS/Ecommerce-API && venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload```
