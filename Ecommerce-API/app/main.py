@@ -1,4 +1,4 @@
-from app.routers import products, categories, carts, users, auth, accounts, events
+from app.routers import products, categories, carts, users, auth, accounts, events, recommendations
 from fastapi import FastAPI
 from app.db.database import SessionLocal
 from app.models.models import User
@@ -58,6 +58,7 @@ app.include_router(users.router)
 app.include_router(accounts.router)
 app.include_router(auth.router)
 app.include_router(events.router)
+app.include_router(recommendations.router)
 
 
 @app.on_event("startup")
