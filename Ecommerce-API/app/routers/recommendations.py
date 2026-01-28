@@ -5,6 +5,10 @@ Endpoints for product recommendations using Qdrant vector search
 
 from fastapi import APIRouter, HTTPException, status
 import logging
+import tempfile
+import os
+import requests as http_requests
+from urllib.parse import urlparse
 
 from app.schemas.recommendations import (
     RecommendationRequest,
@@ -85,7 +89,33 @@ async def get_recommendations(request: RecommendationRequest):
             detail="At least one of 'query_text' or 'query_image' must be provided",
         )
 
+    temp_image_path = None
     try:
+        # Handle image URL - download if it's a URL
+        image_path_or_url = request.query_image_url
+        if image_path_or_url:
+            parsed = urlparse(image_path_or_url)
+            # Check if it's a URL (has scheme like http/https)
+            if parsed.scheme in ('http', 'https'):
+                try:
+                    # Download the image
+                    response = http_requests.get(image_path_or_url, timeout=10)
+                    response.raise_for_status()
+                    
+                    # Save to temporary file
+                    suffix = os.path.splitext(parsed.path)[1] or '.jpg'
+                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                    temp_file.write(response.content)
+                    temp_file.close()
+                    temp_image_path = temp_file.name
+                    image_path_or_url = temp_image_path
+                    logger.info(f"Downloaded image from URL to {temp_image_path}")
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Failed to download image from URL: {str(e)}"
+                    )
+        
         # Determine query type
         if request.query_text and request.query_image_url:
             query_type = "multimodal"
@@ -102,7 +132,7 @@ async def get_recommendations(request: RecommendationRequest):
         # Perform search using Qdrant service
         results = qdrant_service.search(
             query_text=request.query_text,
-            query_image=request.query_image_url,
+            query_image=image_path_or_url,
             limit=request.limit,
             score_threshold=request.score_threshold,
             collection_name="products",  # Default collection
@@ -138,7 +168,9 @@ async def get_recommendations(request: RecommendationRequest):
     except ValueError as e:
         # Handle validation errors from Qdrant service
         logger.error(f"Validation error: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        )
     except Exception as e:
         # Handle unexpected errors
         logger.error(f"Error processing recommendation request: {str(e)}")
@@ -146,6 +178,14 @@ async def get_recommendations(request: RecommendationRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process recommendation request: {str(e)}",
         )
+    finally:
+        # Clean up temporary image file
+        if temp_image_path and os.path.exists(temp_image_path):
+            try:
+                os.unlink(temp_image_path)
+                logger.info(f"Cleaned up temporary image file: {temp_image_path}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp file {temp_image_path}: {e}")
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
