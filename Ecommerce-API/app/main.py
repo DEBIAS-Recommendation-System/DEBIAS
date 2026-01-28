@@ -1,4 +1,13 @@
-from app.routers import products, categories, carts, users, auth, accounts, events, recommendations
+from app.routers import (
+    products,
+    categories,
+    carts,
+    users,
+    auth,
+    accounts,
+    events,
+    recommendations,
+)
 from fastapi import FastAPI
 from app.db.database import SessionLocal
 from app.models.models import User
@@ -46,7 +55,7 @@ app = FastAPI(
         "layout": "BaseLayout",
         "filter": True,
         "tryItOutEnabled": True,
-        "onComplete": "Ok"
+        "onComplete": "Ok",
     },
 )
 
