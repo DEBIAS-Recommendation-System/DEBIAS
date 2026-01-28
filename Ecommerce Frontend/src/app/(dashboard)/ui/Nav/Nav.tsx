@@ -10,7 +10,7 @@ import useTranslation from "@/translation/useTranslation";
 import PhoneSheet from "./PhoneSheet";
 import LanguageSwitcher from "./LanguageSwitch";
 import useUser from "@/hooks/data/user/useUser";
-import { Player } from "@lottiefiles/react-lottie-player";
+import { Player } from "@/components/LottiePlayer";
 import { menuItems } from "@/constants/menuItems";
 
 export function Nav() {

@@ -32,7 +32,7 @@ export default function SelectedProducts({selectedProducts,setSelectedProducts,i
           <div key={product.id} className='flex flex-col gap-2'>
                   <div  className="grid grid-cols-4 items-center">
                 <Image
-                    src={product.image_url || "/path/to/default-image.png"}
+                    src={product.imgUrl || "/path/to/default-image.png"}
                     alt={product.title}
                     width={60}
                     height={60}
@@ -40,12 +40,15 @@ export default function SelectedProducts({selectedProducts,setSelectedProducts,i
                 />
                 <span>{product.title}</span>
                 <input
+                  
                     type="number"
                     value={product.quantity}
                     onChange={(e) =>
                     handleQuantityChange(product.id, Number(e.target.value))
                     }
                     min="1"
+                    placeholder="Qty"
+                    aria-label="Quantity"
                     className="w-10 border px-2 py-1 focus:outline-none"
                 />
                 <button

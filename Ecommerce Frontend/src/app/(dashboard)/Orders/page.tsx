@@ -1,6 +1,9 @@
 "use client";
+
+import dynamicImport from "next/dynamic";
 import useTranslation from "@/translation/useTranslation";
-import Content from "./ui/Content";
+
+const Content = dynamicImport(() => import("./ui/Content"), { ssr: false });
 
 export const dynamic = 'force-dynamic';
 

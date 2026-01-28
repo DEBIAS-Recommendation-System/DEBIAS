@@ -1,9 +1,12 @@
 "use client";
+
 import React, { useState } from "react";
 import Image from "next/image";
+import dynamicImport from "next/dynamic";
 import { StockPaginationProvider, useStockPagination } from "./context/useStockPagination";
-import Table from "./ui/table";
 import { SearchIcon } from "lucide-react";
+
+const Table = dynamicImport(() => import("./ui/table"), { ssr: false });
 
 export const dynamic = 'force-dynamic';
 

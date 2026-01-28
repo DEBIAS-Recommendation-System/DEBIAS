@@ -1,5 +1,6 @@
 "use client";
-import useProducts from "@/hooks/data/products/useProducts";
+import useFormattedProducts from "@/hooks/data/products/useFormattedProducts";
+import { useCategories as useFastAPICategories } from "@/hooks/fastapi/useCategories";
 import { useQueryClient } from "@tanstack/react-query";
 import { productsQuery } from "@/hooks/data/products/productsQuery";
 import { Pagination } from "@mui/material";
@@ -11,9 +12,8 @@ import FiltersPhone from "./FiltersPhone";
 import { ToggleSortArrow } from "./ToggleSortArrow";
 import useTranslation from "@/translation/useTranslation";
 import { Spinner } from "@/app/ui/Spinner";
-import { Player } from "@lottiefiles/react-lottie-player";
+import { Player } from "@/components/LottiePlayer";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import useCategories from "@/hooks/data/categories/useCategories";
 import createNewPathname from "@/helpers/createNewPathname";
 import Product from "../../ui/home/ui/ProductsSection/Product";
 export interface ProductsFilterType {
@@ -26,17 +26,34 @@ export default function Content() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const { data: categories } = useCategories();
+  const { data: categoriesData } = useFastAPICategories();
+  const categories = categoriesData?.data || [];
+  
+  // Parse search params with validation
+  const categoryParam = searchParams.get("category");
+  const minPriceParam = searchParams.get("minPrice");
+  const maxPriceParam = searchParams.get("maxPrice");
+  const discountParam = searchParams.get("discount");
+  
   const filters: ProductsFilterType = {
     category_id:
-      categories?.data?.find((e) => e.name === searchParams.get("category"))
-        ?.id ?? null,
+      categories?.find((e) => e.name === categoryParam)?.id ?? null,
     priceRange: [
-      Number(searchParams.get("minPrice")),
-      Number(searchParams.get("maxPrice")),
+      minPriceParam ? Number(minPriceParam) : 0,
+      maxPriceParam ? Number(maxPriceParam) : 0,
     ],
-    minDiscount: Number(searchParams.get("discount")),
+    minDiscount: discountParam ? Number(discountParam) : 0,
   };
+  
+  // Only include filters that have actual values (not defaults)
+  const activeFilters: Partial<ProductsFilterType> = {};
+  if (discountParam && !isNaN(Number(discountParam))) {
+    activeFilters.minDiscount = Number(discountParam);
+  }
+  if (minPriceParam && maxPriceParam && !isNaN(Number(minPriceParam)) && !isNaN(Number(maxPriceParam))) {
+    activeFilters.priceRange = [Number(minPriceParam), Number(maxPriceParam)];
+  }
+  
   const sortOptions = [
     {
       label: translation?.lang["price"],
@@ -61,27 +78,40 @@ export default function Content() {
     ascending: false,
   });
   const limit = 18;
+  
   const queryArgs = {
     page,
     limit,
     sort,
-    filters,
+    filters: activeFilters,
     match: filters.category_id
       ? { category_id: filters.category_id }
       : undefined,
   };
-  const { data: products, isLoading } = useProducts(queryArgs);
+  
+  const { data: products, isLoading } = useFormattedProducts(queryArgs);
+  console.log("Query args:", queryArgs);
+  console.log("Products data:", products);
+  const productsList = products?.data || [];
+  const isLastPage = productsList.length < limit;
+  const totalPages = products?.meta?.total_pages || (isLastPage ? page : page + 1);
+  
   const queryClient = useQueryClient();
+  
+  // Prefetch next page only if not on last page
   useEffect(() => {
-    if (products?.meta?.has_next_page) {
-      queryClient.prefetchQuery(
-        productsQuery({
-          ...queryArgs,
-          page: page + 1,
-        }),
-      );
+    if (!isLastPage && products?.meta?.has_next_page) {
+      const timer = setTimeout(() => {
+        queryClient.prefetchQuery(
+          productsQuery({
+            ...queryArgs,
+            page: page + 1,
+          }),
+        );
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [page, products?.meta?.has_next_page, sort, filters, queryClient]);
+  }, [page, isLastPage, products?.meta?.has_next_page, queryClient]);
   return (
     <div dir={translation?.default_language ==="ar" ? "rtl" : "ltr"}  className="mx-auto flex flex-row gap-12 max-[830px]:gap-0">
       <FiltersLaptop />
@@ -118,9 +148,9 @@ export default function Content() {
           <div className="flex min-h-screen w-screen max-w-[50rem] items-start justify-center pt-[20%]">
             <Spinner className="size-12 self-center justify-self-center" />
           </div>
-        ) : products.data && products.data.length > 0 ? (
+        ) : productsList && productsList.length > 0 ? (
           <div className="mx-auto grid min-h-screen w-[50rem] grid-cols-3 gap-x-10 gap-y-10 max-[1150px]:w-max max-[1150px]:grid-cols-2 max-[830px]:grid-cols-2">
-            {products.data.map((product, key) => (
+            {productsList.map((product, key) => (
               <Product key={key} {...product} />
             ))}
           </div>
@@ -139,7 +169,7 @@ export default function Content() {
 
         <Pagination
           className="flex w-full justify-center"
-          count={products?.meta?.total_pages}
+          count={totalPages}
           page={page}
           dir="ltr"
           boundaryCount={1}

@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState } from "react";
-import Products from "./ui/products";
+import dynamicImport from "next/dynamic";
 import {
   ProductsPaginationProvider,
   useProductsPagination,
@@ -9,6 +9,8 @@ import {
 import { SearchIcon } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
+
+const Products = dynamicImport(() => import("./ui/products"), { ssr: false });
 
 function ProductListPage() {
   const [searchQuery, setSearchQuery] = useState<string>(""); // State for search query

@@ -1,13 +1,18 @@
 "use client";
+
 import useOrders from "@/hooks/data/orders/useOrders";
 import { Tables } from "@/types/database.types";
 import React, { useState, useEffect } from "react";
-import Day from "./ui/day";
+import dynamicImport from "next/dynamic";
 import Image from "next/image";
 import { SelectGeneric } from "@/app/ui/SelectGeneric";
 import getOldestOrder from "@/api/Orders/getOldestOrder";
 import { getLastDayOfMonth } from "@/helpers/getLastDayOfMonth";
-import { Player } from "@lottiefiles/react-lottie-player";
+
+const Day = dynamicImport(() => import("./ui/day"), { ssr: false });
+const LoadingSpinner = dynamicImport(() => import("@lottiefiles/react-lottie-player").then(mod => ({
+  default: (props: any) => <mod.Player {...props} />
+})), { ssr: false });
 
 export const dynamic = 'force-dynamic';
 
@@ -114,7 +119,7 @@ export default function Page() {
       </div>
       {isLoading ? (
         <div className="m-auto flex mt-[10rem] items-center justify-center">
-        <Player
+        <LoadingSpinner
           className="m-auto"
           autoplay
           loop

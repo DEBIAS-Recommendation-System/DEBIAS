@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import useProducts from "@/hooks/data/products/useProducts";
+import useFormattedProducts from "@/hooks/data/products/useFormattedProducts";
 import { useEffect, useState } from "react";
 import { Pagination } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,19 +20,25 @@ export function ProductsSection() {
     }),
     [],
   );
-  const { data: products, isLoading } = useProducts({ page, limit, sort });
+  const { data: products, isLoading } = useFormattedProducts({ page, limit, sort });
   const queryClient = useQueryClient();
+  
+  // Prefetch next page only when user navigates (not on every render)
   useEffect(() => {
-    if (products?.meta?.has_next_page) {
-      queryClient.prefetchQuery(
-        productsQuery({
-          page: page + 1,
-          limit,
-          sort,
-        }),
-      );
+    if (page > 1 && products?.meta?.has_next_page) {
+      // Use a timeout to prefetch after user interaction
+      const timer = setTimeout(() => {
+        queryClient.prefetchQuery(
+          productsQuery({
+            page: page + 1,
+            limit,
+            sort,
+          }),
+        );
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [page, products?.meta?.has_next_page, sort, queryClient]);
+  }, [page]);
   const { data: translation } = useTranslation();
   return (
     <section className="px-6 py-20" aria-labelledby="products-heading">

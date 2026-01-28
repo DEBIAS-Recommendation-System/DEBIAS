@@ -6,9 +6,15 @@ import { useCallback, useEffect, useState } from "react";
 import useProducts from "@/hooks/data/products/useProducts";
 import Image from "next/image";
 import Link from "next/link";
-import { Player } from "@lottiefiles/react-lottie-player";
+import dynamic from "next/dynamic";
 import { Spinner } from "@/app/ui/Spinner";
 import debounce from "lodash.debounce";
+
+// Dynamic import to prevent SSR issues
+const Player = dynamic(
+  () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
+  { ssr: false }
+);
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -75,7 +81,7 @@ export default function SearchBar() {
       },
     },
   }));
-  const isEmptyResult = products.data && products.data.length === 0;
+  const isEmptyResult = products?.data && products.data.length === 0;
   return (
     <>
       <Search dir="ltr" className="relative max-[400px]:w-[50%]">
@@ -112,7 +118,7 @@ export default function SearchBar() {
                 autoplay
               />
             ) : (
-              products.data?.map((product) => (
+              products?.data?.map((product) => (
                 <SearchBarProduct
                   key={product?.id}
                   product={product}

@@ -7,6 +7,7 @@ import { WishlistHart } from "./WishListHart";
 import { IProduct } from "@/types/database.tables.types";
 
 export default function Product(product: Partial<IProduct>) {
+  console.log("Rendering Product:", product);
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
       <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50 md:h-72">
@@ -20,7 +21,7 @@ export default function Product(product: Partial<IProduct>) {
         )}
         <Link href={`/products/${product.slug}`}>
           <Image
-            src={product.image_url || "/product/prod2.jpg"}
+            src={product.imgUrl || product.imgUrl || "/product/prod2.jpg"}
             alt={product.title || "Product image"}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

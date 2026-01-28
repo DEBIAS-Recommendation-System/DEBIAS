@@ -62,7 +62,7 @@ const removeItem = () => {
       >
         <div className="flex w-full gap-2 max-[390px]:gap-1 sm:flex-row md:flex-col md:items-center lg:flex-row">
           <Image
-            src={product?.image_url ?? ""}
+            src={product?.imgUrl ?? ""}
             alt="item_img"
             className="h-[7rem] w-[7rem] p-3 max-[390px]:p-0 md:h-[14rem] md:w-[14rem] lg:h-[7rem] lg:w-[7rem]"
             width={500}

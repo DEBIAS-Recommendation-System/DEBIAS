@@ -1,5 +1,5 @@
 "use client";
-import useProducts from "@/hooks/data/products/useProducts";
+import { useProducts } from "@/hooks/fastapi/useProducts";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { ProductSwiper } from "./ProductSwiper";
@@ -11,16 +11,17 @@ export default function RecommendationSection() {
   const decodedSlug = decodeURIComponent(Array.isArray(slug) ? slug[0] : slug);
   const { data } = useProductBySlug(String(decodedSlug));
   const product = data?.data;
-  const { data: products } = useProducts({
-    page: 1,
-    limit: 12,
-    match: { category_id: product?.category_id },
-    filters: {
-      minStock: 1,
-    },
-  });
+  
+  // Fetch products from FastAPI
+  const { data: productsResponse } = useProducts({ page: 1, limit: 50 });
+  
+  // Filter by category client-side (until FastAPI supports category filtering)
+  const products = productsResponse?.data?.filter(
+    (p) => p.category === product?.category && p.product_id !== product?.product_id
+  ).slice(0, 12) || [];
+  
   const { data: translation } = useTranslation();
-  if (!products.data || products.data?.length === 0) return null;
+  if (!products || products.length === 0) return null;
   return (
     <div className="mt-20 flex flex-col gap-12">
       <div className="flex flex-row items-center justify-center gap-3">
@@ -40,7 +41,7 @@ export default function RecommendationSection() {
           width={15}
         />
       </div>
-      <ProductSwiper products={products?.data} />
+      <ProductSwiper products={products} />
     </div>
   );
 }

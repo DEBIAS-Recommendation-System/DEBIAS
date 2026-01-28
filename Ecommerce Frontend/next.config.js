@@ -11,6 +11,8 @@ const nextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['@/components', '@/lib', '@/utils'],
+    // Disable CSS optimization that requires critters module
+    // optimizeCss: true,
     turbo: {
       resolveAlias: {
         'stream': 'stream-browserify',
@@ -21,6 +23,10 @@ const nextConfig = {
   swcMinify: true,
   // Production optimizations
   reactStrictMode: true,
+  // Optimize output
+  compress: true,
+  // Optimize images
+  optimizeFonts: true,
   // Reduce bundle size
   modularizeImports: {
     '@/components': {

@@ -197,11 +197,11 @@ export default function Page() {
             className="m-auto"
           />
           <input
-            className=""
+            className="hidden"
             name="filepicture"
             type="file"
             accept="image/*"
-            style={{ display: "none" }}
+            aria-label="Upload product image"
             onChange={handleImageChange}
           />
           <div className="mx-auto w-48 text-center text-xs text-gray-500">

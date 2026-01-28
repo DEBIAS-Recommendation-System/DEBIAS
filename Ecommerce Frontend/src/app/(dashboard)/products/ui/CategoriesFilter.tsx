@@ -1,13 +1,14 @@
 import Checkbox from "@/app/ui/Checkbox";
 import createNewPathname from "@/helpers/createNewPathname";
-import useCategories from "@/hooks/data/categories/useCategories";
+import { useCategories } from "@/hooks/fastapi/useCategories";
 import useTranslation from "@/translation/useTranslation";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function CategoriesFilter() {
   const paramsCategoryName = useSearchParams().get("category");
   const category = paramsCategoryName ?? null;
-  const { data: categories } = useCategories();
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData?.data || [];
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -17,7 +18,7 @@ export default function CategoriesFilter() {
       <span className="mb-1 text-sm font-medium uppercase">
         {translation?.lang["Category"]}
       </span>
-      {categories?.data?.map((e) => (
+      {categories?.map((e) => (
         <Checkbox
           key={e.name}
           name="discount_options"

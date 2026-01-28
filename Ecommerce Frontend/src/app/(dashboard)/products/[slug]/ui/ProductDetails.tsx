@@ -29,7 +29,7 @@ export default function ProductDetails() {
                   delay: 5000,
                 }}
                 slides={[
-                  product?.image_url,
+                  product?.imgUrl || product?.image_url,
                   ...(product?.extra_images_urls ?? []),
                 ].map((url) => (
                   <Image

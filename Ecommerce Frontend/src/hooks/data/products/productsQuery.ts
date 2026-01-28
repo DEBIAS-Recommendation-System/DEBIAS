@@ -29,43 +29,28 @@ const productsQuery = (args: ProductsQueryType) => ({
     },
   ],
   queryFn: async () => {
-    const [data, countData] = await Promise.all([
-      getProducts({
-        tableName: "products",
-        ...args,
-        match: args.match,
-        minDiscount: args.filters?.minDiscount,
-        priceRange: args.filters?.priceRange,
-        minStock: args.filters?.minStock,
-        pagination: {
-          page: args.page,
-          limit: args.limit,
-        },
-      }),
-      getProducts({
-        tableName: "products",
-        count: { count: "exact", head: true },
-        ...args,
-        match: args.match,
-        minDiscount: args.filters?.minDiscount,
-        priceRange: args.filters?.priceRange,
-        minStock: args.filters?.minStock,
-        pagination: {
-          page: args.page,
-          limit: args.limit,
-        },
-      }).then((res) => ({
-        count: res.count,
-        error: res.error,
-      })),
-    ]);
+    // Single call - get both data and count from one request
+    const data = await getProducts({
+      tableName: "products",
+      count: { count: "exact" },
+      ...args,
+      match: args.match,
+      minDiscount: args.filters?.minDiscount,
+      priceRange: args.filters?.priceRange,
+      minStock: args.filters?.minStock,
+      pagination: {
+        page: args.page,
+        limit: args.limit,
+      },
+    });
+    
     return {
       ...infinityPagination(data?.data ?? [], {
         page: args.page,
         limit: args.limit,
-        total_count: countData.count ?? 0,
+        total_count: data.count ?? 0,
       }),
-      error: data.error || countData.error,
+      error: data.error,
     };
   },
 });

@@ -19,19 +19,13 @@ const cartQuery = () => ({
       return { data: [], error: null, count: 0 };
     }
 
-    const [data, countData] = await Promise.all([
-      getCartProducts({
-        tableName: "products",
-        productsIds,
-      }),
-      getCartProducts({
-        tableName: "products",
-        productsIds,
-      }).then((res) => ({
-        count: res.count,
-        error: res.error,
-      })),
-    ]);
+    // Single call with count included
+    const data = await getCartProducts({
+      tableName: "products",
+      count: { count: "exact" },
+      productsIds,
+    });
+    
     const cartProducts: ICartItem[] =
       data?.data?.map((product) => ({
         ...product,
@@ -41,8 +35,8 @@ const cartQuery = () => ({
 
     return {
       data: cartProducts,
-      count: countData.count,
-      error: data.error || countData.error,
+      count: data.count,
+      error: data.error,
     };
   },
 });

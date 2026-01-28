@@ -14,7 +14,7 @@ export default function OrderItem({ item }: { item: OrderProduct }) {
     <div className="ite flex items-center rounded-md bg-white p-4 transition-all duration-200 hover:shadow-lg">
       <div className="flex flex-col gap-2">
         <Image
-          src={formattedProduct?.image_url ?? ""}
+          src={formattedProduct?.imgUrl ?? ""}
           alt="img"
           width={150}
           className="rounded-md max-sm:w-[5rem]"

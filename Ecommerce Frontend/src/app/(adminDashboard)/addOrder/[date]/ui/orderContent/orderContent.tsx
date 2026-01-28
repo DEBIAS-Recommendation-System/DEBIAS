@@ -187,7 +187,7 @@ export default function OrderContent() {
               >
                 <div className="flex items-center gap-4">
                   <Image
-                    src={product?.image_url || "/path/to/default-image.png"}
+                    src={product?.imgUrl || "/path/to/default-image.png"}
                     alt={product?.title || "Product"}
                     width={40}
                     height={40}

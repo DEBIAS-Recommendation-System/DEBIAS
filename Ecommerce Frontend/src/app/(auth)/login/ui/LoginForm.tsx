@@ -12,7 +12,7 @@ export default function LoginForm() {
     <div className="mx-auto flex h-fit w-full max-w-[75rem] flex-col rounded-lg border bg-white p-10 shadow-lg">
       <div className="relative mb-8 h-64 w-full max-lg:h-28 max-sm:hidden">
         <Image
-          src="/bgBanner.svg"
+          src="/bgBanner.jpg"
           alt="Login Banner"
           layout="fill"
           objectFit="cover"

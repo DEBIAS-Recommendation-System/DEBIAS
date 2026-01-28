@@ -7,6 +7,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import Store from "@/provider/QCStore";
 import Script from "next/script";
+import { Toaster } from "sonner";
 
 const lato = Lato({
   weight: ["100", "300", "400", "700", "900"],
@@ -94,6 +95,7 @@ export default function RootLayout({
       <body className={lato.className + " min-h-screen"}>
         <Analytics />
         <SpeedInsights />
+        <Toaster position="top-right" richColors />
         <Store>
           <Hydration>
             <ToastProvider>

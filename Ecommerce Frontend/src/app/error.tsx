@@ -1,7 +1,14 @@
 "use client"; // Error components must be Client Components
-import { Player } from "@lottiefiles/react-lottie-player";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+
+// Dynamic import to prevent SSR issues with Lottie Player
+const Player = dynamic(
+  () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
+  { ssr: false }
+);
+
 export default function Error({
   error,
   reset,

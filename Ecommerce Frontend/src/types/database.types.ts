@@ -172,7 +172,7 @@ export type Database = {
           discount_type: Database["public"]["Enums"]["discount_type_enum"];
           extra_images_urls: string[] | null;
           id: string;
-          image_url: string | null;
+          imgUrl: string | null;
           price: number;
           slug: string | null;
           stock: number;

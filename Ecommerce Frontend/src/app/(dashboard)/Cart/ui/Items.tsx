@@ -1,10 +1,16 @@
 "use client";
 import React from "react";
 import CartItem from "./CartItem";
-import { Player } from "@lottiefiles/react-lottie-player";
+import dynamic from "next/dynamic";
 import { useFilters } from "../context/FiltersProvider";
 import useTranslation from "@/translation/useTranslation";
 import useCart from "@/hooks/data/cart/useCart";
+
+// Dynamic import to prevent SSR issues
+const Player = dynamic(
+  () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
+  { ssr: false }
+);
 
 export default function Items() {
   const { filter, isReversed } = useFilters();

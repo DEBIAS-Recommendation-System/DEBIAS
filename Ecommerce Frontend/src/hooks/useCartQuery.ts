@@ -21,7 +21,7 @@ export const cartKeys = {
 export function useCarts(params?: { page?: number; limit?: number }) {
   return useQuery({
     queryKey: cartKeys.list(params),
-    queryFn: () => cartsApi.getCarts(params),
+    queryFn: () => cartsApi.getAll(params),
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 }
@@ -32,7 +32,7 @@ export function useCarts(params?: { page?: number; limit?: number }) {
 export function useCart(id: number) {
   return useQuery({
     queryKey: cartKeys.detail(id),
-    queryFn: () => cartsApi.getCart(id),
+    queryFn: () => cartsApi.getById(id),
     enabled: !!id,
     staleTime: 30 * 1000, // 30 seconds (carts change frequently)
   });
@@ -45,7 +45,7 @@ export function useCreateCart() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (cart: CartCreate) => cartsApi.createCart(cart),
+    mutationFn: (cart: CartCreate) => cartsApi.create(cart),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartKeys.lists() });
     },
@@ -60,7 +60,7 @@ export function useUpdateCart() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: CartUpdate }) =>
-      cartsApi.updateCart(id, data),
+      cartsApi.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cartKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: cartKeys.lists() });
@@ -75,7 +75,7 @@ export function useDeleteCart() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: cartsApi.deleteCart,
+    mutationFn: cartsApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartKeys.lists() });
     },
@@ -84,7 +84,8 @@ export function useDeleteCart() {
 
 /**
  * Hook to add item to cart
- * Convenience wrapper around updateCart
+ * NOTE: These convenience methods (addToCart, removeFromCart, updateCartItemQuantity)
+ * are not implemented in the FastAPI backend. Use updateCart instead to modify cart items.
  */
 export function useAddToCart() {
   const queryClient = useQueryClient();
@@ -98,7 +99,10 @@ export function useAddToCart() {
       cartId: number; 
       productId: number; 
       quantity: number;
-    }) => cartsApi.addToCart(cartId, productId, quantity),
+    }) => {
+      // These helper methods don't exist in the API - use updateCart instead
+      throw new Error('Use updateCart to modify cart items');
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cartKeys.detail(variables.cartId) });
       queryClient.invalidateQueries({ queryKey: cartKeys.lists() });
@@ -113,8 +117,10 @@ export function useRemoveFromCart() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ cartId, productId }: { cartId: number; productId: number }) =>
-      cartsApi.removeFromCart(cartId, productId),
+    mutationFn: ({ cartId, productId }: { cartId: number; productId: number }) => {
+      // These helper methods don't exist in the API - use updateCart instead
+      throw new Error('Use updateCart to modify cart items');
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cartKeys.detail(variables.cartId) });
       queryClient.invalidateQueries({ queryKey: cartKeys.lists() });
@@ -137,7 +143,10 @@ export function useUpdateCartItemQuantity() {
       cartId: number;
       productId: number;
       quantity: number;
-    }) => cartsApi.updateCartItemQuantity(cartId, productId, quantity),
+    }) => {
+      // These helper methods don't exist in the API - use updateCart instead
+      throw new Error('Use updateCart to modify cart items');
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cartKeys.detail(variables.cartId) });
       queryClient.invalidateQueries({ queryKey: cartKeys.lists() });

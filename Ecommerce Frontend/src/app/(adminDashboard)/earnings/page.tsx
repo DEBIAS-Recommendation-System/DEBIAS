@@ -1,10 +1,12 @@
 "use client";
 import React from 'react';
 import Image from 'next/image';
-import Revenu from './ui/revenu';
-import LastYearIncome from './ui/lastYearIncome';
+import dynamicImport from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
+
+const Revenu = dynamicImport(() => import('./ui/revenu'), { ssr: false });
+const LastYearIncome = dynamicImport(() => import('./ui/lastYearIncome'), { ssr: false });
 
 export default function Page() {
   return (

@@ -35,15 +35,15 @@ export default function Page() {
   const decodedSlug = decodeURIComponent(Array.isArray(slug) ? slug[0] : slug);
   const { data: product, isLoading } = useProductBySlug(String(decodedSlug));
   const [preview, setPreview] = useState<string>(
-    product.data?.image_url ?? "/noArticlePic.png",
+    product.data?.imgUrl ?? "/noArticlePic.png",
   );
   const [images, setImages] = useState<File[]>([]);
 
   useEffect(() => {
-    if (product?.data?.image_url) {
-      setPreview(product.data.image_url);
+    if (product?.data?.imgUrl) {
+      setPreview(product.data.imgUrl);
     }
-  }, [product?.data?.image_url]);
+  }, [product?.data?.imgUrl]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -83,7 +83,7 @@ export default function Page() {
       });
       if (!result.success) throw new Error("Erreur de validation");
 
-      let image_url = product?.data?.image_url;
+      let image_url = product?.data?.imgUrl;
       if (filepicture.size > 0) {
         image_url = await uploadFile({
           formData,
@@ -227,10 +227,11 @@ export default function Page() {
             className="m-auto"
           />
           <input
+            className="hidden"
             name="filepicture"
             type="file"
             accept="image/*"
-            style={{ display: "none" }}
+            aria-label="Upload product image"
             onChange={handleImageChange}
           />
           <div className="mx-auto w-48 text-center text-xs text-gray-500">

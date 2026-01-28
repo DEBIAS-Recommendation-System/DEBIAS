@@ -1,6 +1,9 @@
-// Central export for all FastAPI services
-export { authApi } from './authApi';
-export { productsApi } from './productsApi';
-export { categoriesApi } from './categoriesApi';
-export { cartsApi } from './cartsApi';
-export { accountApi } from './accountApi';
+// Central export for all FastAPI endpoints
+export { authApi } from "./auth";
+export { productsApi } from "./products";
+export { categoriesApi } from "./categories";
+export { cartsApi } from "./carts";
+export { usersApi } from "./users";
+export { accountApi } from "./account";
+export { eventsApi } from "./events";
+export { default as apiClient, TokenManager } from "./apiClient";
