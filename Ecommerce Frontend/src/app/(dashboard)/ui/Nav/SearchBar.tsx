@@ -149,7 +149,7 @@ function SearchBarProduct({
     id: string;
     title: string;
     description: string;
-    image_url: string | null;
+    imgUrl: string | null;
   } | null;
   setValue: (value: any) => void;
 }) {
@@ -163,7 +163,7 @@ function SearchBarProduct({
       }}
     >
       <Image
-        src={product?.image_url ?? ""}
+        src={product?.imgUrl ?? ""}
         alt=""
         className="overflow-clip rounded-sm bg-clip-border"
         width={75}

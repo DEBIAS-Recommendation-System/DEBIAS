@@ -1,10 +1,10 @@
 "use client";
-import { useProducts } from "@/hooks/fastapi/useProducts";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { ProductSwiper } from "./ProductSwiper";
 import useTranslation from "@/translation/useTranslation";
 import useProductBySlug from "@/hooks/data/products/useProductBySlug";
+import useFormattedProducts from "@/hooks/data/products/useFormattedProducts";
 
 export default function RecommendationSection() {
   const { slug } = useParams();
@@ -12,13 +12,11 @@ export default function RecommendationSection() {
   const { data } = useProductBySlug(String(decodedSlug));
   const product = data?.data;
   
-  // Fetch products from FastAPI
-  const { data: productsResponse } = useProducts({ page: 1, limit: 50 });
+  // Fetch formatted products with cart and wishlist data
+  const { data: productsResponse } = useFormattedProducts({ page: 1, limit: 12 });
   
-  // Filter by category client-side (until FastAPI supports category filtering)
-  const products = productsResponse?.data?.filter(
-    (p) => p.category === product?.category && p.product_id !== product?.product_id
-  ).slice(0, 12) || [];
+  // Just show the first 12 products
+  const products = productsResponse?.data || [];
   
   const { data: translation } = useTranslation();
   if (!products || products.length === 0) return null;

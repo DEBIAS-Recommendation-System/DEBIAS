@@ -51,13 +51,18 @@ export const TokenManager = {
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`, config.params);
     const token = TokenManager.getAccessToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("🔑 Added auth token");
+    } else {
+      console.log("🔓 No auth token (public endpoint)");
     }
     return config;
   },
   (error) => {
+    console.error("❌ Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
@@ -82,8 +87,17 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 };
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+    return response;
+  },
   async (error: AxiosError) => {
+    console.error(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message
+    });
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };

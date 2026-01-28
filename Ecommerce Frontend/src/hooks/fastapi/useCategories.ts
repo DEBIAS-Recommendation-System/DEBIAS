@@ -23,7 +23,19 @@ export const categoryKeys = {
 export const useCategories = (params?: PaginationParams): UseQueryResult<CategoriesResponse, Error> => {
   return useQuery({
     queryKey: categoryKeys.list(params),
-    queryFn: () => categoriesApi.getAll(params),
+    queryFn: async () => {
+      console.log("useCategories queryFn called with params:", params);
+      try {
+        const result = await categoriesApi.getAll(params);
+        console.log("useCategories result:", result);
+        return result;
+      } catch (error) {
+        console.error("useCategories error:", error);
+        throw error;
+      }
+    },
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 

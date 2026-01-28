@@ -20,7 +20,14 @@ export function ProductsSection() {
     }),
     [],
   );
-  const { data: products, isLoading } = useFormattedProducts({ page, limit, sort });
+  
+  console.log("=== ProductsSection component rendered ===");
+  console.log("Query args:", { page, limit, sort });
+  
+  const { data: products, isLoading, isFetching, status, error } = useFormattedProducts({ page, limit, sort });
+  
+
+  
   const queryClient = useQueryClient();
   
   // Prefetch next page only when user navigates (not on every render)

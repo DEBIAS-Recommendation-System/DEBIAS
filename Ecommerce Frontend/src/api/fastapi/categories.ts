@@ -10,10 +10,17 @@ import {
 export const categoriesApi = {
   // Get all categories
   getAll: async (params?: PaginationParams): Promise<CategoriesResponse> => {
-    const response = await apiClient.get<CategoriesResponse>("/categories", {
-      params,
-    });
-    return response.data;
+    console.log("Fetching categories from API with params:", params);
+    try {
+      const response = await apiClient.get<CategoriesResponse>("/categories", {
+        params,
+      });
+      console.log("Categories API response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      throw error;
+    }
   },
 
   // Get category by ID

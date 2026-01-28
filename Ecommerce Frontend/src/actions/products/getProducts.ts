@@ -80,9 +80,9 @@ export default async function getProducts({
     const result = await response.json();
     console.log("FastAPI result:", result);
     
-    // FastAPI returns { message, data }
+    // FastAPI returns { message, data, total_count }
     let products = result.data || [];
-    const totalCount = products.length;
+    const totalCount = result.total_count || 0; // Use the API's total count
 
     // Apply client-side filters that aren't supported by the API yet
     if (match) {

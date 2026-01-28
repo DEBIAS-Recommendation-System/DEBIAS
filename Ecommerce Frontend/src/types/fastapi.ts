@@ -4,6 +4,7 @@
 export interface ApiResponse<T> {
   message: string;
   data: T;
+  total_count?: number; // Added for paginated responses
 }
 
 // ==================== AUTH TYPES ====================

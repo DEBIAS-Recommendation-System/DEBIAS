@@ -7,9 +7,18 @@ from app.utils.responses import ResponseHandler
 class CategoryService:
     @staticmethod
     def get_all_categories(db: Session, page: int, limit: int, search: str = ""):
-        categories = db.query(Category).order_by(Category.id.asc()).filter(
-            Category.name.contains(search)).limit(limit).offset((page - 1) * limit).all()
-        return {"message": f"Page {page} with {limit} categories", "data": categories}
+        # Get total count for pagination
+        query = db.query(Category).filter(Category.name.contains(search))
+        total_count = query.count()
+        
+        # Get paginated categories
+        categories = query.order_by(Category.id.asc()).limit(limit).offset((page - 1) * limit).all()
+        
+        return {
+            "message": f"Page {page} with {len(categories)} categories", 
+            "data": categories,
+            "total_count": total_count
+        }
 
     @staticmethod
     def get_category(db: Session, category_id: int):
