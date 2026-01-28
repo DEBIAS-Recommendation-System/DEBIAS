@@ -29,19 +29,18 @@ class RecommendationRequest(BaseModel):
         description="Filter conditions (e.g., {'category': 'Electronics', 'brand': 'Sony'})",
     )
     use_mmr: bool = Field(
-        False,
-        description="Enable MMR (Maximal Marginal Relevance) for diverse results"
+        False, description="Enable MMR (Maximal Marginal Relevance) for diverse results"
     )
     mmr_diversity: float = Field(
         0.5,
         ge=0.0,
         le=1.0,
-        description="MMR diversity parameter: 0.0 = pure relevance, 1.0 = maximum diversity"
+        description="MMR diversity parameter: 0.0 = pure relevance, 1.0 = maximum diversity",
     )
     mmr_candidates: Optional[int] = Field(
         None,
         ge=1,
-        description="Number of candidates to fetch before applying MMR (default: limit * 10)"
+        description="Number of candidates to fetch before applying MMR (default: limit * 10)",
     )
 
     class Config:
@@ -53,7 +52,7 @@ class RecommendationRequest(BaseModel):
                 "filters": {"category": "Sports & Outdoors"},
                 "use_mmr": True,
                 "mmr_diversity": 0.6,
-                "mmr_candidates": 50
+                "mmr_candidates": 50,
             }
         }
 

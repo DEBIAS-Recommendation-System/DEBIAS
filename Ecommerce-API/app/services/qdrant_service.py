@@ -441,21 +441,20 @@ class QdrantService:
             if use_mmr:
                 # Use query_points API with MMR for diversity
                 candidates = mmr_candidates or (limit * 10)
-                
+
                 results = self.client.query_points(
                     collection_name=collection_name,
                     query=qdrant_models.NearestQuery(
                         nearest=query_vector,
                         mmr=qdrant_models.Mmr(
-                            diversity=mmr_diversity,
-                            candidates_limit=candidates
-                        )
+                            diversity=mmr_diversity, candidates_limit=candidates
+                        ),
                     ),
                     limit=limit,
                     query_filter=query_filter,
                     score_threshold=score_threshold,
                 )
-                
+
                 logger.info(
                     f"Found {len(results.points)} results with MMR "
                     f"(diversity={mmr_diversity}, candidates={candidates})"
@@ -469,16 +468,12 @@ class QdrantService:
                     query_filter=query_filter,
                     score_threshold=score_threshold,
                 )
-                
+
                 logger.info(f"Found {len(results.points)} results for query")
 
             # Format results (same for both)
             formatted_results = [
-                {
-                    "id": point.id,
-                    "score": point.score,
-                    "payload": point.payload
-                }
+                {"id": point.id, "score": point.score, "payload": point.payload}
                 for point in results.points
             ]
 

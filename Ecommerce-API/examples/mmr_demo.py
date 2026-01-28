@@ -14,23 +14,25 @@ def print_results(title, results):
     print("=" * 80)
     for i, rec in enumerate(results, 1):
         print(f"{i}. {rec['title'][:65]}")
-        print(f"   Brand: {rec.get('brand', 'N/A'):15} | Price: ${rec.get('price', 0):8.2f} | Score: {rec['score']:.4f}")
+        print(
+            f"   Brand: {rec.get('brand', 'N/A'):15} | Price: ${rec.get('price', 0):8.2f} | Score: {rec['score']:.4f}"
+        )
     print()
 
 
 def compare_searches(query, limit=6):
     """Compare regular search vs MMR search"""
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"QUERY: '{query}'")
-    print(f"{'='*80}")
-    
+    print(f"{'=' * 80}")
+
     # Regular search
     response = requests.post(
         "http://localhost:8000/recommendations/",
-        json={"query_text": query, "limit": limit}
+        json={"query_text": query, "limit": limit},
     )
     regular = response.json()
-    
+
     # MMR search with moderate diversity
     response = requests.post(
         "http://localhost:8000/recommendations/",
@@ -38,11 +40,11 @@ def compare_searches(query, limit=6):
             "query_text": query,
             "limit": limit,
             "use_mmr": True,
-            "mmr_diversity": 0.7
-        }
+            "mmr_diversity": 0.7,
+        },
     )
     mmr_moderate = response.json()
-    
+
     # MMR search with high diversity
     response = requests.post(
         "http://localhost:8000/recommendations/",
@@ -50,32 +52,29 @@ def compare_searches(query, limit=6):
             "query_text": query,
             "limit": limit,
             "use_mmr": True,
-            "mmr_diversity": 0.9
-        }
+            "mmr_diversity": 0.9,
+        },
     )
     mmr_high = response.json()
-    
+
     # Print results
+    print_results("🔍 REGULAR SEARCH (No MMR)", regular["recommendations"])
+
     print_results(
-        "🔍 REGULAR SEARCH (No MMR)",
-        regular['recommendations']
+        "🎯 MMR with MODERATE diversity (0.7)", mmr_moderate["recommendations"]
     )
-    
-    print_results(
-        "🎯 MMR with MODERATE diversity (0.7)",
-        mmr_moderate['recommendations']
-    )
-    
-    print_results(
-        "🌈 MMR with HIGH diversity (0.9)",
-        mmr_high['recommendations']
-    )
-    
+
+    print_results("🌈 MMR with HIGH diversity (0.9)", mmr_high["recommendations"])
+
     # Analysis
-    brands_regular = {r['brand'] for r in regular['recommendations'] if r.get('brand')}
-    brands_mmr_mod = {r['brand'] for r in mmr_moderate['recommendations'] if r.get('brand')}
-    brands_mmr_high = {r['brand'] for r in mmr_high['recommendations'] if r.get('brand')}
-    
+    brands_regular = {r["brand"] for r in regular["recommendations"] if r.get("brand")}
+    brands_mmr_mod = {
+        r["brand"] for r in mmr_moderate["recommendations"] if r.get("brand")
+    }
+    brands_mmr_high = {
+        r["brand"] for r in mmr_high["recommendations"] if r.get("brand")
+    }
+
     print("📊 DIVERSITY ANALYSIS")
     print("-" * 80)
     print(f"Regular search:         {len(brands_regular)} different brands")
@@ -91,11 +90,11 @@ def main():
     print()
     print("MMR helps reduce redundancy and increase diversity in search results.")
     print("Higher diversity values (0.0-1.0) prioritize variety over pure similarity.")
-    
+
     # Test different queries
     compare_searches("laptop computer", limit=5)
     compare_searches("nike shoes", limit=5)
-    
+
     print("\n" + "=" * 80)
     print("✅ Demo complete!")
     print("=" * 80)
