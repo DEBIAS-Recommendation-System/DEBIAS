@@ -12,44 +12,42 @@ test_queries = [
     "sewing machine",
     "laptop computer",
     "notebook lenovo",
-    "blue dress shirt"
+    "blue dress shirt",
 ]
 
-print('📝 Text-Only Search Test')
-print('=' * 80)
+print("📝 Text-Only Search Test")
+print("=" * 80)
 
 # Connect to Qdrant
 qdrant_service.connect()
 
 # Initialize CLIP text model (must match the model used during embedding)
-print('Initializing CLIP text model...')
+print("Initializing CLIP text model...")
 qdrant_service.initialize_text_embedding_model("Qdrant/clip-ViT-B-32-text")
-print('✓ Model ready\n')
+print("✓ Model ready\n")
 
 for query in test_queries:
     print(f'\n🔍 Query: "{query}"')
-    print('-' * 80)
-    
+    print("-" * 80)
+
     # Search using text only
     results = qdrant_service.search(
-        query_text=query,
-        collection_name='products',
-        limit=5
+        query_text=query, collection_name="products", limit=5
     )
-    
+
     if results:
-        print(f'\n✨ Found {len(results)} semantically similar products:')
-        
+        print(f"\n✨ Found {len(results)} semantically similar products:")
+
         for i, result in enumerate(results, 1):
-            print(f'\n  {i}. {result["payload"]["title"][:65]}')
-            print(f'     Brand: {result["payload"]["brand"]}')
-            print(f'     Category: {result["payload"]["category"]}')
-            print(f'     Price: ${result["payload"]["price"]:.2f}')
-            print(f'     Similarity Score: {result["score"]:.4f}')
+            print(f"\n  {i}. {result['payload']['title'][:65]}")
+            print(f"     Brand: {result['payload']['brand']}")
+            print(f"     Category: {result['payload']['category']}")
+            print(f"     Price: ${result['payload']['price']:.2f}")
+            print(f"     Similarity Score: {result['score']:.4f}")
     else:
-        print('   ⚠️  No results found')
-    
+        print("   ⚠️  No results found")
+
     print()
 
-print('=' * 80)
-print('✅ Text search test completed!')
+print("=" * 80)
+print("✅ Text search test completed!")
