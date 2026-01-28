@@ -3,15 +3,15 @@ services:
     image: postgres:15
     container_name: fastapi-postgres
     environment:
-      POSTGRES_USER: ${db_username:-postgres}
-      POSTGRES_PASSWORD: ${db_password:-postgres}
-      POSTGRES_DB: ${db_name:-postgres}
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${db_username:-postgres} -d ${db_name:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,6 +30,25 @@ services:
       timeout: 5s
       retries: 5
 
+  neo4j:
+    image: neo4j:ubi9
+    container_name: neo4j-graph-db
+    environment:
+      - NEO4J_AUTH=neo4j/testing_password
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_config:/config
+    healthcheck:
+      test:
+        ["CMD-SHELL", "cypher-shell -u neo4j -p testing_password 'RETURN 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build:
       context: ./Ecommerce-API
@@ -39,6 +58,8 @@ services:
       - Ecommerce-API/.env
     environment:
       db_hostname: db
+      qdrant_hostname: qdrant
+      neo4j_hostname: neo4j
     depends_on:
       db:
         condition: service_healthy
@@ -49,3 +70,6 @@ services:
 volumes:
   postgres_data:
   qdrant_data:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_config:

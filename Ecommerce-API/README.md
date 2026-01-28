@@ -24,7 +24,8 @@ If python3.10 is not on your PATH, install it before continuing. Using the syste
 ## Environment Configuration
 
 Copy the `.env.example` into `.env`
-```
+
+````
 
 On startup the app ensures an admin user exists using the admin_* values. Change them before the first run if you want different defaults.
 
@@ -37,7 +38,7 @@ On startup the app ensures an admin user exists using the admin_* values. Change
    source venv/bin/activate
    python -m pip install --upgrade pip
    python -m pip install -r requirements.txt
-   ```
+````
 
 2. **Apply database migrations**
 
@@ -52,7 +53,6 @@ On startup the app ensures an admin user exists using the admin_* values. Change
    ```
 
    Visit:
-
    - API root: http://127.0.0.1:8000/
    - Swagger UI: http://127.0.0.1:8000/docs
    - ReDoc: http://127.0.0.1:8000/redoc
@@ -65,7 +65,6 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 
    The script clears the schema, seeds data, exercises every endpoint, and prints progress to the terminal.
 
-
 ## Docker Compose
 
 1. Copy `.env` with the desired credentials (the bootstrap admin section is required).
@@ -76,7 +75,6 @@ On startup the app ensures an admin user exists using the admin_* values. Change
    ```
 
    This launches:
-
    - `fastapi-app` on http://127.0.0.1:8000/
    - `fastapi-postgres` on port 5432 (mapped to the host for optional psql access)
 
@@ -114,7 +112,6 @@ On startup the app ensures an admin user exists using the admin_* values. Change
 
 - `ModuleNotFoundError` or missing wheels: confirm you activated the venv and that it was created with Python 3.10/3.11.
 - `pg_config executable not found`: ensure you are using psycopg2-binary via the supplied requirements and that the Postgres container is running.
-
 
 ## Dev Quick Start (from repo root)
 
@@ -163,5 +160,3 @@ docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres
 docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT COUNT(*) AS carts_count FROM carts;"
 docker exec -e PGPASSWORD=postgres fastapi-postgres psql -U postgres -d postgres -c "SELECT COUNT(*) AS cart_items_count FROM cart_items;"
 ```
-
-   
