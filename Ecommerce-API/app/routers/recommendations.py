@@ -96,14 +96,14 @@ async def get_recommendations(request: RecommendationRequest):
         if image_path_or_url:
             parsed = urlparse(image_path_or_url)
             # Check if it's a URL (has scheme like http/https)
-            if parsed.scheme in ('http', 'https'):
+            if parsed.scheme in ("http", "https"):
                 try:
                     # Download the image
                     response = http_requests.get(image_path_or_url, timeout=10)
                     response.raise_for_status()
-                    
+
                     # Save to temporary file
-                    suffix = os.path.splitext(parsed.path)[1] or '.jpg'
+                    suffix = os.path.splitext(parsed.path)[1] or ".jpg"
                     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
                     temp_file.write(response.content)
                     temp_file.close()
@@ -113,9 +113,9 @@ async def get_recommendations(request: RecommendationRequest):
                 except Exception as e:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Failed to download image from URL: {str(e)}"
+                        detail=f"Failed to download image from URL: {str(e)}",
                     )
-        
+
         # Determine query type
         if request.query_text and request.query_image_url:
             query_type = "multimodal"
@@ -168,9 +168,7 @@ async def get_recommendations(request: RecommendationRequest):
     except ValueError as e:
         # Handle validation errors from Qdrant service
         logger.error(f"Validation error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         # Handle unexpected errors
         logger.error(f"Error processing recommendation request: {str(e)}")
