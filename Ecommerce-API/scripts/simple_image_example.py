@@ -2,6 +2,10 @@
 Simple image embedding example using local sample images
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.services.qdrant_service import qdrant_service
 from PIL import Image, ImageDraw, ImageFont
 import os
@@ -21,11 +25,9 @@ def create_sample_images():
     }
 
     for idx, (name, (color, label)) in enumerate(colors.items(), 1):
-        # Create a simple colored image with text
         img = Image.new("RGB", (400, 400), color=color)
         draw = ImageDraw.Draw(img)
 
-        # Draw product category text
         try:
             font = ImageFont.truetype(
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40
