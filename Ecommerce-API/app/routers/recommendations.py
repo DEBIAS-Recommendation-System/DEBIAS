@@ -137,6 +137,9 @@ async def get_recommendations(request: RecommendationRequest):
             score_threshold=request.score_threshold,
             collection_name="products",  # Default collection
             filter_conditions=request.filters,
+            use_mmr=request.use_mmr,
+            mmr_diversity=request.mmr_diversity,
+            mmr_candidates=request.mmr_candidates,
         )
 
         # Transform results into response format

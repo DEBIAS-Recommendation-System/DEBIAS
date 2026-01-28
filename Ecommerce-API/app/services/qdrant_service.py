@@ -5,6 +5,7 @@ Handles connection to Qdrant and embedding operations
 
 from typing import List, Dict, Any, Optional, Union
 from qdrant_client import QdrantClient
+from qdrant_client import models as qdrant_models
 from qdrant_client.models import (
     Distance,
     VectorParams,
@@ -385,6 +386,9 @@ class QdrantService:
         score_threshold: Optional[float] = None,
         collection_name: Optional[str] = None,
         filter_conditions: Optional[Dict[str, Any]] = None,
+        use_mmr: bool = False,
+        mmr_diversity: float = 0.5,
+        mmr_candidates: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         Search for similar vectors in Qdrant
@@ -398,6 +402,9 @@ class QdrantService:
             score_threshold: Minimum similarity score (0-1)
             collection_name: Name of the collection (uses default if not provided)
             filter_conditions: Optional filters to apply
+            use_mmr: Enable MMR (Maximal Marginal Relevance) for diverse results
+            mmr_diversity: MMR diversity parameter (0.0=relevance, 1.0=diversity)
+            mmr_candidates: Number of candidates to fetch before MMR (default: limit * 10)
 
         Returns:
             List of search results with id, score, and payload
@@ -430,19 +437,49 @@ class QdrantService:
                     ]
                 )
 
-            # Search
-            results = self.client.search(
-                collection_name=collection_name,
-                query_vector=query_vector,
-                limit=limit,
-                score_threshold=score_threshold,
-                query_filter=query_filter,
-            )
+            # Search with MMR or regular search using query_points API
+            if use_mmr:
+                # Use query_points API with MMR for diversity
+                candidates = mmr_candidates or (limit * 10)
+                
+                results = self.client.query_points(
+                    collection_name=collection_name,
+                    query=qdrant_models.NearestQuery(
+                        nearest=query_vector,
+                        mmr=qdrant_models.Mmr(
+                            diversity=mmr_diversity,
+                            candidates_limit=candidates
+                        )
+                    ),
+                    limit=limit,
+                    query_filter=query_filter,
+                    score_threshold=score_threshold,
+                )
+                
+                logger.info(
+                    f"Found {len(results.points)} results with MMR "
+                    f"(diversity={mmr_diversity}, candidates={candidates})"
+                )
+            else:
+                # Use regular query_points without MMR
+                results = self.client.query_points(
+                    collection_name=collection_name,
+                    query=query_vector,
+                    limit=limit,
+                    query_filter=query_filter,
+                    score_threshold=score_threshold,
+                )
+                
+                logger.info(f"Found {len(results.points)} results for query")
 
-            # Format results
+            # Format results (same for both)
             formatted_results = [
-                {"id": hit.id, "score": hit.score, "payload": hit.payload}
-                for hit in results
+                {
+                    "id": point.id,
+                    "score": point.score,
+                    "payload": point.payload
+                }
+                for point in results.points
             ]
 
             logger.info(f"Found {len(formatted_results)} results for query")

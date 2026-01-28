@@ -49,6 +49,10 @@ Health check endpoint to verify service status.
 - `limit` *(optional)*: Maximum number of recommendations to return (default: 10, max: 100)
 - `score_threshold` *(optional)*: Minimum similarity score (0-1). Only results above this threshold are returned
 - `filters` *(optional)*: Dictionary of key-value pairs to filter results (e.g., `{"category": "Electronics"}`)
+- `use_mmr` *(optional)*: Enable MMR (Maximal Marginal Relevance) for diverse results (default: false)
+- `mmr_diversity` *(optional)*: MMR diversity parameter (0.0-1.0, default: 0.5). 0.0 = pure relevance, 1.0 = maximum diversity
+- `mmr_candidates` *(optional)*: Number of candidates to fetch before applying MMR (default: limit * 10)
+- `filters` *(optional)*: Dictionary of key-value pairs to filter results (e.g., `{"category": "Electronics"}`)
 
 **Note:** At least one of `query_text` or `query_image` must be provided.
 
@@ -211,6 +215,84 @@ curl -X GET "http://localhost:8000/recommendations/health"
 }
 ```
 
+### 5. MMR Search for Diversity
+
+Use MMR to get diverse results instead of very similar items:
+
+```bash
+curl -X POST "http://localhost:8000/recommendations/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query_text": "laptop",
+    "limit": 5,
+    "use_mmr": true,
+    "mmr_diversity": 0.8
+  }'
+```
+
+**Comparison Example:**
+
+**Without MMR (Regular Search)** - Returns very similar items:
+```json
+{
+  "recommendations": [
+    {
+      "title": "ASUS ExpertBook B9 - 2TB SSD, 32GB RAM",
+      "brand": "asus",
+      "category": "computers.notebook"
+    },
+    {
+      "title": "ASUS ExpertBook B9 - 1TB SSD, 16GB RAM",
+      "brand": "asus",
+      "category": "computers.notebook"
+    },
+    {
+      "title": "ASUS ExpertBook B1 - 256GB SSD, 8GB RAM",
+      "brand": "asus",
+      "category": "computers.notebook"
+    },
+    {
+      "title": "ASUS ExpertBook B5 - 1TB SSD, 16GB RAM",
+      "brand": "asus",
+      "category": "computers.notebook"
+    }
+  ]
+}
+```
+
+**With MMR (diversity=0.8)** - Returns diverse brands and models:
+```json
+{
+  "recommendations": [
+    {
+      "title": "ASUS ExpertBook B9 - 1TB SSD, 16GB RAM",
+      "brand": "asus",
+      "category": "computers.notebook"
+    },
+    {
+      "title": "Lenovo ThinkPad P17 Gen 2 - 32GB RAM, NVIDIA RTX A2000",
+      "brand": "lenovo",
+      "category": "computers.notebook"
+    },
+    {
+      "title": "ASUS VivoBook S15 - 16GB RAM, 512GB SSD",
+      "brand": "asus",
+      "category": "computers.notebook"
+    },
+    {
+      "title": "MSI Creator Z16 - GeForce RTX 3060, 16GB RAM",
+      "brand": "msi",
+      "category": "computers.notebook"
+    }
+  ]
+}
+```
+
+Notice how MMR provides:
+- **More brand diversity** (ASUS, Lenovo, MSI instead of all ASUS)
+- **Different product lines** (ExpertBook, ThinkPad, VivoBook, Creator)
+- **Varied specifications** (Gaming, Workstation, Business models)
+
 ---
 
 ## Error Responses
@@ -254,6 +336,7 @@ The endpoint uses:
   - Text embeddings: ~10-50ms per query
   - Image embeddings: ~50-200ms per query
 - **Vector Search**: Typically <100ms for collections up to 1M vectors
+- **MMR Processing**: Additional 50-200ms depending on candidates_limit
 - **Filters**: Applied during search, minimal performance impact
 
 ### Filtering
