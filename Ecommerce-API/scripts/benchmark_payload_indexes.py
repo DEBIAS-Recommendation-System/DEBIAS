@@ -82,7 +82,7 @@ class Benchmark:
                     print(f"   Found {len(results)} results")
 
             except Exception as e:
-                print(f"   ⚠️  Error on iteration {i+1}: {e}")
+                print(f"   ⚠️  Error on iteration {i + 1}: {e}")
                 continue
 
         if not latencies:
@@ -298,7 +298,7 @@ class Benchmark:
 
             # Progress indicator
             if (i + 1) % 10 == 0:
-                print(f"   Progress: {i+1}/{iterations}")
+                print(f"   Progress: {i + 1}/{iterations}")
 
         total_time = time.time() - start_time
         qps = successful / total_time if total_time > 0 else 0
@@ -344,7 +344,7 @@ class Benchmark:
             print(f"\n🚀 Speedup: {speedup:.2f}x faster with filter!")
         else:
             print(
-                f"\n📊 Ratio: {1/speedup:.2f}x (filtered search takes {1/speedup:.2f}x time)"
+                f"\n📊 Ratio: {1 / speedup:.2f}x (filtered search takes {1 / speedup:.2f}x time)"
             )
 
     def _print_selectivity_comparison(self, results: List[Dict]):
@@ -418,22 +418,20 @@ class Benchmark:
         if "no_filter_vs_filter" in self.results:
             data = self.results["no_filter_vs_filter"]
             if data.get("no_filter") and data.get("with_filter"):
-                speedup = (
-                    data["no_filter"]["mean_ms"] / data["with_filter"]["mean_ms"]
-                )
+                speedup = data["no_filter"]["mean_ms"] / data["with_filter"]["mean_ms"]
                 print(
                     f"\n1. Filter Performance: {speedup:.2f}x speedup with category filter"
                 )
 
         if "filter_selectivity" in self.results:
-            print(
-                "2. Selectivity: More selective filters = better index utilization"
-            )
+            print("2. Selectivity: More selective filters = better index utilization")
 
         if "hnsw_ef_comparison" in self.results:
             results = self.results["hnsw_ef_comparison"]
             if results and len(results) > 1:
-                fastest = min(results, key=lambda x: x["mean_ms"] if x else float("inf"))
+                fastest = min(
+                    results, key=lambda x: x["mean_ms"] if x else float("inf")
+                )
                 print(f"3. Optimal ef: {fastest['label']} ({fastest['mean_ms']:.2f}ms)")
 
         if "mmr_overhead" in self.results:
@@ -489,7 +487,7 @@ def main():
 
     # Adjust iterations
     iterations = 5 if args.quick else args.iterations
-    
+
     # Use specified collection or default from settings
     collection_name = args.collection or settings.qdrant_collection_name
 

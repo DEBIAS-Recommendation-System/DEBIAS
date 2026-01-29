@@ -39,9 +39,7 @@ def setup_indexes():
         )
 
         if not collection_exists:
-            print(
-                f"⚠️  Collection '{settings.qdrant_collection_name}' does not exist."
-            )
+            print(f"⚠️  Collection '{settings.qdrant_collection_name}' does not exist.")
             print("   Please create the collection first using the embedding scripts.")
             return
 

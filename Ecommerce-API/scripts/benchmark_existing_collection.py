@@ -53,7 +53,7 @@ class ExistingCollectionBenchmark:
     def sample_vectors_from_collection(self, count: int = 10):
         """Sample random vectors from the collection to use in searches"""
         print(f"📊 Sampling {count} vectors from collection...")
-        
+
         # Scroll through collection to get sample vectors
         points, _ = self.client.scroll(
             collection_name=self.collection_name,
@@ -61,7 +61,7 @@ class ExistingCollectionBenchmark:
             with_vectors=True,
             with_payload=True,
         )
-        
+
         self.sample_vectors = points
         print(f"✅ Sampled {len(points)} vectors\n")
         return points
@@ -82,7 +82,7 @@ class ExistingCollectionBenchmark:
                 # Use a random sample vector for each iteration
                 sample = self.sample_vectors[i % len(self.sample_vectors)]
                 vector = sample.vector
-                
+
                 # Measure search time
                 start_time = time.time()
                 results = self.client.query_points(
@@ -110,7 +110,9 @@ class ExistingCollectionBenchmark:
             "mean_ms": statistics.mean(latencies),
             "median_ms": statistics.median(latencies),
             "p95_ms": (
-                statistics.quantiles(latencies, n=20)[18] if len(latencies) >= 20 else max(latencies)
+                statistics.quantiles(latencies, n=20)[18]
+                if len(latencies) >= 20
+                else max(latencies)
             ),
             "std_ms": statistics.stdev(latencies) if len(latencies) > 1 else 0,
             "min_ms": min(latencies),
@@ -126,12 +128,12 @@ class ExistingCollectionBenchmark:
             limit=100,
             with_payload=True,
         )
-        
+
         categories = set()
         for point in points:
-            if point.payload and 'category' in point.payload:
-                categories.add(point.payload['category'])
-        
+            if point.payload and "category" in point.payload:
+                categories.add(point.payload["category"])
+
         return list(categories)[:5]  # Return up to 5 categories
 
     def benchmark_no_filter_vs_filter(self, iterations: int = 20):
@@ -146,7 +148,7 @@ class ExistingCollectionBenchmark:
         if not categories:
             print("⚠️  No categories found in collection")
             return
-        
+
         test_category = categories[0]
 
         # Test 1: No filter
@@ -161,11 +163,11 @@ class ExistingCollectionBenchmark:
         print()
         print("🔍 Test 1.2: With category filter")
         print(f"   Category: {test_category}")
-        
+
         category_filter = Filter(
             must=[FieldCondition(key="category", match=MatchValue(value=test_category))]
         )
-        
+
         result_with_filter = self.run_search_benchmark(
             "Category Filter", filter_obj=category_filter, iterations=iterations
         )
@@ -199,7 +201,9 @@ class ExistingCollectionBenchmark:
             if speedup > 1:
                 print(f"🚀 Speedup: {speedup:.2f}x faster with filter!")
             else:
-                print(f"⚠️  Filter added {1/speedup:.2f}x overhead (expected with small dataset)")
+                print(
+                    f"⚠️  Filter added {1 / speedup:.2f}x overhead (expected with small dataset)"
+                )
 
         # Store results
         self.results["no_filter_vs_filter"] = {
@@ -224,27 +228,31 @@ class ExistingCollectionBenchmark:
 
         for category in categories[:3]:  # Test up to 3 categories
             print(f"🔍 Testing category: {category}")
-            
+
             category_filter = Filter(
                 must=[FieldCondition(key="category", match=MatchValue(value=category))]
             )
-            
+
             result = self.run_search_benchmark(
                 f"Category: {category}",
                 filter_obj=category_filter,
                 iterations=iterations,
             )
-            
+
             if result:
                 results_by_category.append(result)
-                print(f"   Mean: {result['mean_ms']:.2f}ms, Results: {result['avg_results']:.0f}")
+                print(
+                    f"   Mean: {result['mean_ms']:.2f}ms, Results: {result['avg_results']:.0f}"
+                )
             print()
 
         # Summary table
         if results_by_category:
             print("📈 Results Summary:")
             print()
-            print(f"{'Category':<30} {'Mean (ms)':<12} {'P95 (ms)':<12} {'Avg Results':<12}")
+            print(
+                f"{'Category':<30} {'Mean (ms)':<12} {'P95 (ms)':<12} {'Avg Results':<12}"
+            )
             print("-" * 70)
             for result in results_by_category:
                 print(
@@ -265,20 +273,29 @@ class ExistingCollectionBenchmark:
         if "no_filter_vs_filter" in self.results:
             no_filter = self.results["no_filter_vs_filter"].get("no_filter")
             with_filter = self.results["no_filter_vs_filter"].get("with_filter")
-            
+
             if no_filter and with_filter:
                 speedup = no_filter["mean_ms"] / with_filter["mean_ms"]
-                print(f"1. Filter Performance: {speedup:.2f}x speedup with category filter")
+                print(
+                    f"1. Filter Performance: {speedup:.2f}x speedup with category filter"
+                )
             else:
                 print("1. Filter Performance: Insufficient data")
 
-        if "multiple_categories" in self.results and self.results["multiple_categories"]:
-            avg_latency = statistics.mean([r["mean_ms"] for r in self.results["multiple_categories"]])
+        if (
+            "multiple_categories" in self.results
+            and self.results["multiple_categories"]
+        ):
+            avg_latency = statistics.mean(
+                [r["mean_ms"] for r in self.results["multiple_categories"]]
+            )
             print(f"2. Average Filtered Search: {avg_latency:.2f}ms across categories")
 
         print()
         print("💡 Tips for Better Performance:")
-        print("   • Ensure payload indexes are created: python scripts/setup_payload_indexes.py")
+        print(
+            "   • Ensure payload indexes are created: python scripts/setup_payload_indexes.py"
+        )
         print("   • More selective filters = better performance")
         print("   • Combine multiple filters for precise results")
         print()
@@ -321,7 +338,7 @@ def main():
 
     # Adjust iterations
     iterations = 5 if args.quick else args.iterations
-    
+
     # Use specified collection or default from settings
     collection_name = args.collection or settings.qdrant_collection_name
 
@@ -367,6 +384,7 @@ def main():
     except Exception as e:
         print(f"❌ Error during benchmark: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
