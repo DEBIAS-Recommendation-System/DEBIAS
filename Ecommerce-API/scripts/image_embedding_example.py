@@ -3,6 +3,11 @@ Example usage of Qdrant service with IMAGE embeddings for product search
 Demonstrates how to embed product images and search by visual similarity
 """
 
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.services.qdrant_service import qdrant_service
 import os
 
