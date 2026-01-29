@@ -13,6 +13,7 @@ export default function CategoriesFilter() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: translation } = useTranslation();
+  console.log("categories data:", categoriesData);
   return (
     <div className="flex flex-col items-start justify-center bg-white">
       <span className="mb-1 text-sm font-medium uppercase">

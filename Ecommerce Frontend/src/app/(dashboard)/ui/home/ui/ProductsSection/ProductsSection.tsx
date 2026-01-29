@@ -13,18 +13,11 @@ import Product from "./Product";
 export function ProductsSection() {
   const [page, setPage] = useState(1);
   const limit = 8;
-  const sort = useMemo(
-    () => ({
-      column: "discount" as const,
-      ascending: false,
-    }),
-    [],
-  );
   
-  console.log("=== ProductsSection component rendered ===");
-  console.log("Query args:", { page, limit, sort });
+  // Removed sort by discount since that field doesn't exist in the database
+  // Products will be sorted by product_id by default
   
-  const { data: products, isLoading, isFetching, status, error } = useFormattedProducts({ page, limit, sort });
+  const { data: products, isLoading, isFetching, status, error } = useFormattedProducts({ page, limit });
   
 
   
@@ -39,13 +32,12 @@ export function ProductsSection() {
           productsQuery({
             page: page + 1,
             limit,
-            sort,
           }),
         );
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [page]);
+  }, [page, products?.meta?.has_next_page, queryClient, limit]);
   const { data: translation } = useTranslation();
   return (
     <section className="px-6 py-20" aria-labelledby="products-heading">

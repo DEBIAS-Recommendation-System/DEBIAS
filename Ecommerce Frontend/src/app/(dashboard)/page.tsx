@@ -1,8 +1,17 @@
 "use client";
 import React from "react";
-import HomeSwiper from "./ui/home/ui/HomeSwiper";
-import MomentsSwiper from "./ui/home/ui/MomentsSwiper";
+import dynamic from "next/dynamic";
 import { ProductsSection } from "./ui/home/ui/ProductsSection/ProductsSection";
+
+const HomeSwiper = dynamic(() => import("./ui/home/ui/HomeSwiper"), {
+  ssr: false,
+  loading: () => <div className="h-96 w-full animate-pulse bg-gray-200" />,
+});
+
+const MomentsSwiper = dynamic(() => import("./ui/home/ui/MomentsSwiper"), {
+  ssr: false,
+  loading: () => <div className="h-64 w-full animate-pulse bg-gray-200" />,
+});
 
 export default function Page() {
   return (

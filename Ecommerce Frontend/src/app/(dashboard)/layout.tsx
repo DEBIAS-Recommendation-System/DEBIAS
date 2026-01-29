@@ -4,6 +4,10 @@ import getProfile from "@/api/getProfile";
 import { redirect } from "next/navigation";
 import { Nav } from "./ui/Nav/Nav";
 import getTranslation from "@/translation/getTranslation";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function Layout({
   children,
 }: {

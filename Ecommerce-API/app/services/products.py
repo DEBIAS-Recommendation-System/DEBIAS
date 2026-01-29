@@ -7,9 +7,20 @@ from app.utils.responses import ResponseHandler
 class ProductService:
     @staticmethod
     def get_all_products(db: Session, page: int, limit: int, search: str = ""):
-        products = db.query(Product).order_by(Product.product_id.asc()).filter(
-            Product.title.contains(search)).limit(limit).offset((page - 1) * limit).all()
-        return {"message": f"Page {page} with {limit} products", "data": products}
+        # Build the base query with search filter
+        query = db.query(Product).filter(Product.title.contains(search))
+        
+        # Get total count for pagination
+        total_count = query.count()
+        
+        # Get paginated products
+        products = query.order_by(Product.product_id.asc()).limit(limit).offset((page - 1) * limit).all()
+        
+        return {
+            "message": f"Page {page} with {limit} products",
+            "data": products,
+            "total_count": total_count
+        }
 
     @staticmethod
     def get_product(db: Session, product_id: int):

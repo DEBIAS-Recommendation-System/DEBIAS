@@ -3,9 +3,9 @@ const API_URL = "http://127.0.0.1:8000";
 const categories = [
   { name: "Chef & Kitchen" },
   { name: "Fashion & Apparel" },
-  { name: "Gaming & Electronics" },
-  { name: "Home & Lighting" },
-  { name: "Electronics & Power" },
+  { name: "Computers" },
+  { name: "Appliances" },
+  { name: "Electronics" },
   { name: "Sports & Footwear" },
   { name: "Tech & Software" },
 ];
