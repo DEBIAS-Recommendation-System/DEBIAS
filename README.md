@@ -15,6 +15,7 @@
   <img src="https://img.shields.io/badge/Graph-Cold%20Start%20Solver-orange" />
 </p>
 
+
 > **DEBIAS a recommender system that also doubles as a consumer-centric platform for digital commerce.**  
 > It combines semantic understanding, budget awareness, and debiased learning to ensure users discover products that are *relevant, affordable, and fair* and *also popular*.
 
@@ -224,8 +225,13 @@ DEBIAS enables:
 - 🔎 Trustworthy, transparent recommendations
 
 
-***We're very happy to step closer towards consumer-first AI for digital marketplaces.***
+**We're very proud to step closer towards consumer-first AI for digital marketplaces. you can try Debias now:**
 
+<p align="center">
+  <a href="http://34.155.51.100:3000/">
+    <img src="https://img.shields.io/badge/🌐%20Live%20Demo-Try%20DEBIAS-brightgreen?style=for-the-badge" alt="Live Demo" />
+  </a>
+</p>
 ---
 
 ## 👨‍💻 Team
