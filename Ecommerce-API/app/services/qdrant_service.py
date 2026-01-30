@@ -18,8 +18,14 @@ from qdrant_client.models import (
 )
 from fastembed.text.text_embedding import TextEmbedding
 
-# ImageEmbedding not available in current fastembed version
-ImageEmbedding = None
+# Try to import ImageEmbedding - may not be available in all fastembed versions
+try:
+    from fastembed import ImageEmbedding
+except ImportError:
+    try:
+        from fastembed.image.image_embedding import ImageEmbedding
+    except ImportError:
+        ImageEmbedding = None
 
 import logging
 
@@ -68,33 +74,56 @@ class QdrantService:
             raise
 
     def initialize_text_embedding_model(
-        self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+        self, model_name: str = "Qdrant/clip-ViT-B-32-text"
     ):
         """
-        Initialize the FastEmbed text model for embeddings (SENTENCE-BERT)
+        Initialize the FastEmbed text model for embeddings (CLIP for 512d vectors)
 
         Args:
             model_name: Name of the FastEmbed text model to use
                        Options:
+                       - Qdrant/clip-ViT-B-32-text (512d) - CLIP text encoder
                        - sentence-transformers/all-MiniLM-L6-v2 (384d) - Fast & lightweight
                        - sentence-transformers/all-mpnet-base-v2 (768d) - More accurate
-                       - sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 (384d) - Multilingual
         """
-        try:
-            self.text_embedding_model = TextEmbedding(model_name=model_name)
-            # Set vector size based on model
-            if "MiniLM" in model_name or "multilingual" in model_name:
-                self.vector_size = 384
-            elif "mpnet" in model_name or "base" in model_name:
-                self.vector_size = 768
-            else:
-                self.vector_size = 384  # Default
-            logger.info(
-                f"Initialized text embedding model: {model_name} (dimension: {self.vector_size})"
-            )
-        except Exception as e:
-            logger.error(f"Failed to initialize text embedding model: {str(e)}")
-            raise
+        import time
+        import os
+        
+        max_retries = 3
+        
+        # Set cache directory to ensure models are persisted
+        cache_dir = os.environ.get("FASTEMBED_CACHE_PATH", "/app/.cache/fastembed")
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Initializing text embedding model: {model_name} (attempt {attempt + 1}/{max_retries})")
+                self.text_embedding_model = TextEmbedding(
+                    model_name=model_name,
+                    cache_dir=cache_dir
+                )
+                # Set vector size based on model
+                if "clip" in model_name.lower():
+                    self.vector_size = 512
+                elif "MiniLM" in model_name or "multilingual" in model_name:
+                    self.vector_size = 384
+                elif "mpnet" in model_name or "base" in model_name:
+                    self.vector_size = 768
+                else:
+                    self.vector_size = 512  # Default for CLIP
+                logger.info(
+                    f"Successfully initialized text embedding model: {model_name} (dimension: {self.vector_size})"
+                )
+                return  # Success
+            except Exception as e:
+                logger.error(f"Attempt {attempt + 1} failed to initialize text embedding model: {str(e)}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.info(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"All {max_retries} attempts failed. Text embedding model not initialized.")
+                    # Don't raise - allow API to start but search won't work
 
     def initialize_image_embedding_model(
         self, model_name: str = "Qdrant/clip-ViT-B-32-vision"
@@ -109,6 +138,10 @@ class QdrantService:
                        - Qdrant/clip-ViT-B-16-vision (512 dim)
                        - Qdrant/Unicom-ViT-B-16 (768 dim)
         """
+        if ImageEmbedding is None:
+            logger.warning("ImageEmbedding not available in current fastembed version")
+            return
+            
         try:
             self.image_embedding_model = ImageEmbedding(model_name=model_name)
             # CLIP models typically use 512 dimensions
@@ -138,16 +171,36 @@ class QdrantService:
             text_model: CLIP text model name
             image_model: CLIP vision model name (must match text model variant)
         """
-        try:
-            self.text_embedding_model = TextEmbedding(model_name=text_model)
-            self.image_embedding_model = ImageEmbedding(model_name=image_model)
-            self.vector_size = 512  # CLIP models use 512 dimensions
-            logger.info(
-                f"Initialized multimodal models: {text_model} + {image_model} (dimension: {self.vector_size})"
-            )
-        except Exception as e:
-            logger.error(f"Failed to initialize multimodal models: {str(e)}")
-            raise
+        import time
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Initializing text embedding model (attempt {attempt + 1}/{max_retries})...")
+                self.text_embedding_model = TextEmbedding(model_name=text_model)
+                self.vector_size = 512  # CLIP models use 512 dimensions
+                
+                # Initialize image embedding if available
+                if ImageEmbedding is not None:
+                    logger.info(f"Initializing image embedding model...")
+                    self.image_embedding_model = ImageEmbedding(model_name=image_model)
+                    logger.info(
+                        f"Initialized multimodal models: {text_model} + {image_model} (dimension: {self.vector_size})"
+                    )
+                else:
+                    logger.warning(
+                        f"ImageEmbedding not available in fastembed. Text model initialized: {text_model}"
+                    )
+                return  # Success, exit the retry loop
+            except Exception as e:
+                logger.error(f"Attempt {attempt + 1} failed to initialize multimodal models: {str(e)}")
+                if attempt < max_retries - 1:
+                    wait_time = 5 * (attempt + 1)
+                    logger.info(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"All {max_retries} attempts failed. Models not initialized.")
+                    # Don't raise - allow API to start but embedding search won't work
 
     def create_collection(
         self,
@@ -276,9 +329,18 @@ class QdrantService:
 
         Returns:
             List of floats representing the embedding vector
+            
+        Raises:
+            RuntimeError: If embedding model is not available
         """
         if not self.text_embedding_model:
             self.initialize_text_embedding_model()
+        
+        if not self.text_embedding_model:
+            raise RuntimeError(
+                "Text embedding model not available. Model download may have failed. "
+                "Check network connectivity to HuggingFace."
+            )
 
         try:
             # FastEmbed returns a generator, get first result
@@ -638,6 +700,166 @@ class QdrantService:
             }
         except Exception as e:
             logger.error(f"Failed to get collection info: {str(e)}")
+            raise
+
+    def get_product_vectors(
+        self,
+        product_ids: List[int],
+        collection_name: Optional[str] = None,
+        with_vectors: bool = True,
+    ) -> Dict[int, List[float]]:
+        """
+        Retrieve raw embedding vectors for specific products from Qdrant
+
+        Args:
+            product_ids: List of product IDs to retrieve vectors for
+            collection_name: Name of the collection (uses default if not provided)
+            with_vectors: Whether to include vector data (True for orbit view)
+
+        Returns:
+            Dictionary mapping product_id to 512-dimensional vector
+        """
+        if not self.client:
+            self.connect()
+
+        collection_name = collection_name or self.collection_name
+
+        try:
+            # Retrieve points with vectors from Qdrant
+            points = self.client.retrieve(
+                collection_name=collection_name,
+                ids=product_ids,
+                with_vectors=with_vectors,
+            )
+
+            # Build mapping of product_id to vector
+            vectors_map = {}
+            for point in points:
+                if with_vectors and point.vector:
+                    vectors_map[point.id] = point.vector
+
+            logger.info(
+                f"Retrieved {len(vectors_map)} vectors from collection '{collection_name}'"
+            )
+            return vectors_map
+
+        except Exception as e:
+            logger.error(f"Failed to retrieve product vectors: {str(e)}")
+            raise
+
+    def scroll_products(
+        self,
+        collection_name: Optional[str] = None,
+        limit: int = 100,
+        with_vectors: bool = True,
+        offset: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Scroll through products in a collection without vector search.
+        Useful as a fallback when embedding models aren't available.
+
+        Args:
+            collection_name: Name of the collection (uses default if not provided)
+            limit: Maximum number of products to retrieve
+            with_vectors: Whether to include vector data
+            offset: Optional offset for pagination
+
+        Returns:
+            List of product dicts with id, payload, and optionally vector
+        """
+        if not self.client:
+            self.connect()
+
+        collection_name = collection_name or self.collection_name
+
+        try:
+            scroll_result = self.client.scroll(
+                collection_name=collection_name,
+                limit=limit,
+                with_vectors=with_vectors,
+                with_payload=True,
+                offset=offset,
+            )
+
+            points, next_offset = scroll_result
+            
+            products = []
+            for point in points:
+                product = {
+                    "id": point.id,
+                    "payload": point.payload or {},
+                }
+                if with_vectors and point.vector:
+                    product["vector"] = point.vector
+                products.append(product)
+
+            logger.info(f"Scrolled {len(products)} products from collection '{collection_name}'")
+            return products
+
+        except Exception as e:
+            logger.error(f"Failed to scroll products: {str(e)}")
+            raise
+
+    def reduce_dimensions_umap(
+        self,
+        vectors: List[List[float]],
+        n_components: int = 3,
+        n_neighbors: int = 15,
+        min_dist: float = 0.1,
+        metric: str = "cosine",
+    ) -> List[List[float]]:
+        """
+        Reduce high-dimensional vectors (512d) to 3D using UMAP
+        Normalizes coordinates so center of mass is at origin (0,0,0)
+
+        Args:
+            vectors: List of 512-dimensional vectors
+            n_components: Target dimensions (3 for 3D visualization)
+            n_neighbors: UMAP parameter controlling local vs global structure
+            min_dist: UMAP parameter controlling tightness of clusters
+            metric: Distance metric (cosine for semantic similarity)
+
+        Returns:
+            List of 3D coordinates [[x,y,z], ...] centered at origin
+        """
+        try:
+            import umap
+            import numpy as np
+
+            # Convert to numpy array
+            vectors_np = np.array(vectors)
+
+            # Apply UMAP dimensionality reduction
+            reducer = umap.UMAP(
+                n_components=n_components,
+                n_neighbors=n_neighbors,
+                min_dist=min_dist,
+                metric=metric,
+                random_state=42,  # For reproducibility
+            )
+
+            reduced = reducer.fit_transform(vectors_np)
+
+            # Normalize: Center at origin (0,0,0) by subtracting center of mass
+            center_of_mass = np.mean(reduced, axis=0)
+            normalized = reduced - center_of_mass
+
+            # Scale to reasonable range for 3D viewing (-10 to +10)
+            max_abs = np.max(np.abs(normalized))
+            if max_abs > 0:
+                normalized = (normalized / max_abs) * 10.0
+
+            logger.info(
+                f"Reduced {len(vectors)} vectors from {len(vectors[0])}d to {n_components}d using UMAP"
+            )
+
+            return normalized.tolist()
+
+        except ImportError:
+            logger.error("umap-learn not installed. Run: pip install umap-learn")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to reduce dimensions: {str(e)}")
             raise
 
 
