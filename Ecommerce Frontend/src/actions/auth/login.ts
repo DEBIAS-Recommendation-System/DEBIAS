@@ -30,24 +30,28 @@ export default async function login({
           message: errorData.detail || "Login failed",
           type: "Login Error",
         },
+        data: null,
       };
     }
 
     const data = await response.json();
     
-    // Store tokens in localStorage (you might want to use httpOnly cookies instead)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-    }
-
-    return { error: null, data };
+    // Return tokens so they can be stored client-side
+    return { 
+      error: null, 
+      data: {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        token_type: data.token_type,
+      }
+    };
   } catch (error: any) {
     return {
       error: {
         message: error.message || "An unexpected error occurred",
         type: "Login Error",
       },
+      data: null,
     };
   }
 }

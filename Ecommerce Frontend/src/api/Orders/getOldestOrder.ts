@@ -4,7 +4,7 @@ import { Database } from "@/types/database.types";
 import { createClient } from "@/lib/supabase";
 
 export default async function getOldestOrder() {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: orders, error: ordersError } = await supabase
     .from("orders")

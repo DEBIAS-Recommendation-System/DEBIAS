@@ -16,13 +16,6 @@ export default function Page({
   return (
     <ProductByIdHydration productId={params.slug}>
       <div className="mb-20 flex flex-col">
-        <Image
-          src={"/product/opsti-uslovi_header.jpg"}
-          alt="logo"
-          width={2000}
-          height={2000}
-          className="w-full"
-        />
         <BreadCrumbs />
         <ProductDetails />
         <Policies />

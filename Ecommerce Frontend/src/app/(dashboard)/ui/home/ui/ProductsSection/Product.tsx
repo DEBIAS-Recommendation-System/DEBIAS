@@ -22,7 +22,7 @@ export default function Product(product: Partial<IProduct>) {
         )}
 
         {/* Product Image */}
-        <Link href={`/products/${product.id}`} className="relative block h-full w-full">
+        <Link href={`/products/${product.id || product.product_id}`} className="relative block h-full w-full">
           <Image
             src={product.imgUrl || "/product/prod2.jpg"}
             alt={product.title || "Product image"}

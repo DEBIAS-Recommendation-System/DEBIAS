@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 export default async function resetPassword({ email }: { email: string }) {
   const proto = headers().get("x-forwarded-proto") || "http";
   const header_url = headers().get("host") || "";
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${proto}://${header_url}/auth/forgetPassword`,
   });

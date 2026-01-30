@@ -5,80 +5,85 @@ import { ProductSwiper } from "./ProductSwiper";
 import useTranslation from "@/translation/useTranslation";
 import useProductById from "@/hooks/data/products/useProductById";
 import { useQuery } from "@tanstack/react-query";
-import getRecommendations from "@/actions/recommendations/getRecommendations";
+import { getRecommendationsByUserId, OrchestratorRecommendation } from "@/actions/orchestrator";
 import { formatProduct } from "@/hooks/data/products/formatProducts";
 import useCart from "@/hooks/data/cart/useCart";
 import useWishlist from "@/hooks/data/wishlist/useWishlist";
-import { Tables } from "@/types/database.types";
+import { useEffect, useState } from "react";
+
+// Helper to get or create a user ID for recommendations
+function getUserIdForRecommendations(): number {
+  if (typeof window === "undefined") return 1;
+  
+  let userId = localStorage.getItem("recommendation_user_id");
+  if (!userId) {
+    userId = String(Math.floor(Math.random() * 100000) + 1);
+    localStorage.setItem("recommendation_user_id", userId);
+  }
+  return parseInt(userId, 10);
+}
+
+// Transform orchestrator recommendation to product format
+function transformRecommendationToProduct(rec: OrchestratorRecommendation) {
+  const payload = rec.payload || {};
+  return {
+    id: String(rec.product_id),
+    product_id: rec.product_id,
+    title: payload.title || `Product #${rec.product_id}`,
+    price: payload.price || 0,
+    imgUrl: payload.imgUrl || payload.image_url || null,
+    brand: payload.brand,
+    category: payload.category,
+    description: payload.description || "",
+    stock: 100,
+    discount: 0,
+    discount_type: "percentage" as const,
+    category_id: 1,
+    created_at: new Date().toISOString(),
+    extra_images_urls: null,
+    slug: null,
+    subtitle: "",
+    wholesale_price: payload.price || 0,
+    score: rec.score,
+    source: rec.source,
+  };
+}
 
 export default function RecommendationSection() {
   const { slug } = useParams(); // This is actually the product ID
   const productId = Array.isArray(slug) ? slug[0] : slug;
   const { data } = useProductById(String(productId));
   const product = data?.data;
+  const [userId, setUserId] = useState<number>(1);
   
   const { data: cart } = useCart();
   const { data: wishlist } = useWishlist();
+
+  // Get user ID on client side
+  useEffect(() => {
+    setUserId(getUserIdForRecommendations());
+  }, []);
   
-  // Fetch recommendations using the recommendations API endpoint
-  // Uses semantic vector search with MMR for diverse, relevant results
+  // Fetch recommendations using orchestrator endpoint
   const { data: recommendationsResponse, isLoading } = useQuery({
-    queryKey: ["product-recommendations", product?.id, product?.category, product?.brand],
+    queryKey: ["product-recommendations", product?.id, userId],
     queryFn: async () => {
-      if (!product?.title) return null;
+      if (!product?.id) return null;
       
-      // Build a rich semantic query combining product attributes for best results
-      // Include title, category, and brand for comprehensive semantic matching
-      const queryParts = [product.title];
-      if (product.category) queryParts.push(product.category);
-      if (product.brand) queryParts.push(product.brand);
-      if (product.description) {
-        // Add first 100 chars of description for more context
-        queryParts.push(product.description.substring(0, 100));
-      }
-      const queryText = queryParts.join(" ");
-      
-      return await getRecommendations({
-        query_text: queryText,
-        limit: 15, // Request more to account for filtering out current product
-        score_threshold: 0.3, // Minimum similarity threshold for quality results
-        use_mmr: true, // Enable Maximal Marginal Relevance for diverse results
-        mmr_diversity: 0.5, // Balance between relevance (0) and diversity (1)
-        mmr_candidates: 50, // Larger candidate pool for better MMR selection
-        filters: product.category ? { category: product.category } : undefined, // Filter by same category for relevance
-      });
+      const result = await getRecommendationsByUserId(userId, 12, true);
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
     },
-    enabled: !!product?.id && !!product?.title,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    enabled: !!product?.id && userId > 0,
   });
   
-  // Transform recommendations to product format compatible with ProductSwiper
-  const products = recommendationsResponse?.data?.recommendations
-    ?.filter((rec) => String(rec.id) !== String(product?.id)) // Exclude current product
-    ?.slice(0, 12) // Limit to 12 products for the swiper
+  // Format products with cart and wishlist data
+  const products = recommendationsResponse?.recommendations
+    ?.filter((rec) => String(rec.product_id) !== product?.id) // Exclude the current product
     ?.map((rec) => {
-      // Transform recommendation to Tables<"products"> format
-      const productData: Tables<"products"> = {
-        id: String(rec.id),
-        title: rec.title,
-        brand: rec.brand || "",
-        category: rec.category || "",
-        price: rec.price || 0,
-        image_url: rec.image_url || "",
-        description: rec.description || "",
-        stock: 100, // Default stock
-        discount: 0,
-        discount_type: "PERCENTAGE",
-        subtitle: "",
-        category_id: 1,
-        created_at: new Date().toISOString(),
-        slug: null,
-        wholesale_price: rec.price || 0,
-        extra_images_urls: null,
-      };
-      
-      return formatProduct(productData, {
-        cart: cart?.data?.map((item) => item.id),
+      const transformedProduct = transformRecommendationToProduct(rec);
+      return formatProduct(transformedProduct, {
+        cart: cart?.data?.map((item: any) => item.id),
         wishlist: wishlist?.data,
       });
     }) || [];
@@ -108,7 +113,7 @@ export default function RecommendationSection() {
         />
       </div>
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-        <span className="font-semibold">Similar to:</span> {product?.title}
+        <span className="font-semibold">Based on your browsing history</span>
       </div>
       <ProductSwiper products={products} />
     </div>

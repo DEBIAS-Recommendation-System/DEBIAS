@@ -16,7 +16,7 @@ export async function UploadToBucket({
   fileName: string;
   bucketName: string;
 }): Promise<UploadResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.storage
     .from(bucketName)
     .upload(fileName, file, {

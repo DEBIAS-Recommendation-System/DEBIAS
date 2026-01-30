@@ -34,7 +34,7 @@ export default async function getData<
     page: number;
   };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   let query = supabase.from(tableName).select(column, count);
   if (match) {
     query = query.match(match);

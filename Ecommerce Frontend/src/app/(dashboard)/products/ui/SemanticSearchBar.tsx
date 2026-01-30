@@ -19,13 +19,23 @@ interface SemanticProduct {
   imgUrl?: string;
   brand?: string;
   category?: string;
+  score?: number;
 }
 
-interface SemanticSearchResponse {
-  data: SemanticProduct[];
-  total: number;
+interface RecommendationResponse {
   query_type: string;
-  scores?: Record<number, number>;
+  total_results: number;
+  recommendations: Array<{
+    id: number;
+    score: number;
+    title: string;
+    brand?: string;
+    category?: string;
+    price?: number;
+    image_url?: string;
+    description?: string;
+  }>;
+  filters_applied?: Record<string, any>;
 }
 
 const Search = styled("div")(({ theme }) => ({
@@ -57,7 +67,6 @@ export default function SemanticSearchBar() {
   const [value, setValue] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
   const [products, setProducts] = useState<SemanticProduct[]>([]);
-  const [scores, setScores] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -70,32 +79,42 @@ export default function SemanticSearchBar() {
 
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        query,
-        limit: "6",
-        use_mmr: "true",
-        mmr_diversity: "0.3",
+      // Use the /recommendations/ POST endpoint for search
+      const response = await fetch(`${API_URL}/recommendations/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query_text: query,
+          limit: 6,
+          use_mmr: true,
+          mmr_diversity: 0.3,
+        }),
       });
-
-      const response = await fetch(`${API_URL}/products/search/semantic?${params}`);
       
       if (!response.ok) {
         throw new Error("Search failed");
       }
 
-      const data: SemanticSearchResponse = await response.json();
+      const data: RecommendationResponse = await response.json();
       
-      // Transform product_id to id for frontend compatibility
-      const transformedProducts = (data.data || []).map(product => ({
-        ...product,
-        id: String(product.product_id),
+      // Transform recommendations to product format
+      const transformedProducts: SemanticProduct[] = (data.recommendations || []).map(rec => ({
+        product_id: rec.id,
+        id: String(rec.id),
+        title: rec.title,
+        price: rec.price || 0,
+        imgUrl: rec.image_url,
+        brand: rec.brand,
+        category: rec.category,
+        score: rec.score,
       }));
       
       setProducts(transformedProducts);
-      setScores(data.scores || {});
       setIsOpen(true);
     } catch (error) {
-      console.error("Semantic search error:", error);
+      console.error("Search error:", error);
       setProducts([]);
     } finally {
       setIsLoading(false);
@@ -176,7 +195,6 @@ export default function SemanticSearchBar() {
                   <SearchResultProduct
                     key={product.product_id}
                     product={product}
-                    score={scores[product.product_id]}
                     setValue={setValue}
                     setIsOpen={setIsOpen}
                   />
@@ -202,18 +220,16 @@ export default function SemanticSearchBar() {
 
 function SearchResultProduct({
   product,
-  score,
   setValue,
   setIsOpen,
 }: {
   product: SemanticProduct;
-  score?: number;
   setValue: (value: string) => void;
   setIsOpen: (open: boolean) => void;
 }) {
   return (
     <Link
-      href={`/products/${product.id}`}
+      href={`/products/${product.id || product.product_id}`}
       onClick={() => {
         setValue("");
         setIsOpen(false);
@@ -242,9 +258,9 @@ function SearchResultProduct({
           <p className="text-sm font-semibold text-purple-600">
             ${product.price.toFixed(2)}
           </p>
-          {score && (
+          {product.score && (
             <span className="text-xs text-gray-400">
-              {Math.round(score * 100)}% match
+              {Math.round(product.score * 100)}% match
             </span>
           )}
         </div>

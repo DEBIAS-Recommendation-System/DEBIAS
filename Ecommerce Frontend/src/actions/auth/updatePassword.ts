@@ -6,7 +6,7 @@ export default async function updatePassword({
 }: {
   newPassword: string;
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
   });
