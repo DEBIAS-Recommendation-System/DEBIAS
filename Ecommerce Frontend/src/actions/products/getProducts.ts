@@ -100,7 +100,7 @@ export default async function getProducts({
       imgUrl: product.image_url || product.imgUrl || null, // Map image_url to imgUrl
       stock: product.stock ?? 100, // Default stock if missing
       discount: product.discount ?? 0, // Default no discount
-      discount_type: product.discount_type ?? "PERCENTAGE", // Default discount type
+      discount_type: product.discount_type ?? "percentage", // Default discount type
       description: product.description ?? "",
       subtitle: product.subtitle ?? "",
       category_id: product.category_id ?? 1,

@@ -272,7 +272,29 @@ export default function useCreateOrder() {
           </body>
           </html>
         `;
-      };   
+      };
+
+      // Get the first product ID for complementary recommendations
+      const firstProductId = cart.data?.[0]?.id;
+      
+      // Send purchase events to Neo4j for all cart items
+      const sessionId = getSessionId();
+      if (cart?.data && Array.isArray(cart.data)) {
+        const purchaseEvents = cart.data.map((item: any) => ({
+          event_type: "purchase" as const,
+          product_id: parseInt(item.id),
+          user_session: sessionId,
+        }));
+        
+        try {
+          await sendBatchEvents(purchaseEvents);
+          console.log("✅ Purchase events sent for", purchaseEvents.length, "items");
+        } catch (error) {
+          console.error("Failed to send purchase events:", error);
+          // Don't fail the order if event tracking fails
+        }
+      }
+      
       try {
         await sendMail({
           to: args.address,
@@ -295,24 +317,11 @@ export default function useCreateOrder() {
       const { error } = await clearCart(user_id);
       if (error) throw new Error(error);
       localStorage.clear();
-    },
-    onSuccess: async () => {
-      // Send purchase events to Neo4j for all cart items
-      try {
-        const sessionId = getSessionId();
-        if (cart?.data && Array.isArray(cart.data)) {
-          const purchaseEvents = cart.data.map((item: any) => ({
-            event_type: "purchase" as const,
-            product_id: item.product_id,
-            user_session: sessionId,
-          }));
-          await sendBatchEvents(purchaseEvents);
-        }
-      } catch (error) {
-        console.error("Failed to send purchase events:", error);
-        // Don't fail the order if event tracking fails
-      }
 
+      // Return the first product ID for redirecting to complementary products page
+      return { firstProductId };
+    },
+    onSuccess: async (result) => {
       toast.success(
         translation?.lang["Order created successfully"] ??
           "Order created successfully",
@@ -320,6 +329,13 @@ export default function useCreateOrder() {
       await queryClient.invalidateQueries({
         queryKey: ["cart"],
       });
+
+      // Redirect to complementary products page
+      if (result?.firstProductId) {
+        window.location.href = `/order-complete?product_id=${result.firstProductId}`;
+      } else {
+        window.location.href = "/order-complete";
+      }
     },
     onError: (error) => {
       if (!error.message.includes("{")) {
