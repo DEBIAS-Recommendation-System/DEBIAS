@@ -5,10 +5,11 @@ import { ProductSwiper } from "./ProductSwiper";
 import useTranslation from "@/translation/useTranslation";
 import useProductById from "@/hooks/data/products/useProductById";
 import { useQuery } from "@tanstack/react-query";
-import getSemanticSearch from "@/actions/products/getSemanticSearch";
+import getRecommendations from "@/actions/recommendations/getRecommendations";
 import { formatProduct } from "@/hooks/data/products/formatProducts";
 import useCart from "@/hooks/data/cart/useCart";
 import useWishlist from "@/hooks/data/wishlist/useWishlist";
+import { Tables } from "@/types/database.types";
 
 export default function RecommendationSection() {
   const { slug } = useParams(); // This is actually the product ID
@@ -19,36 +20,68 @@ export default function RecommendationSection() {
   const { data: cart } = useCart();
   const { data: wishlist } = useWishlist();
   
-  // Fetch recommendations using semantic search based on current product
-  // This endpoint returns full product objects and has a fallback to regular search
-  const { data: semanticSearchResponse, isLoading } = useQuery({
-    queryKey: ["product-recommendations", product?.id, product?.category],
+  // Fetch recommendations using the recommendations API endpoint
+  // Uses semantic vector search with MMR for diverse, relevant results
+  const { data: recommendationsResponse, isLoading } = useQuery({
+    queryKey: ["product-recommendations", product?.id, product?.category, product?.brand],
     queryFn: async () => {
       if (!product?.title) return null;
       
-      // Create a semantic query based on the current product
-      const searchQuery = `${product.category} ${product.brand} similar to ${product.title}`;
+      // Build a rich semantic query combining product attributes for best results
+      // Include title, category, and brand for comprehensive semantic matching
+      const queryParts = [product.title];
+      if (product.category) queryParts.push(product.category);
+      if (product.brand) queryParts.push(product.brand);
+      if (product.description) {
+        // Add first 100 chars of description for more context
+        queryParts.push(product.description.substring(0, 100));
+      }
+      const queryText = queryParts.join(" ");
       
-      return await getSemanticSearch({
-        query: searchQuery,
-        limit: 12,
-        category: product.category,
-        use_mmr: true,
-        mmr_diversity: 0.6,
+      return await getRecommendations({
+        query_text: queryText,
+        limit: 15, // Request more to account for filtering out current product
+        score_threshold: 0.3, // Minimum similarity threshold for quality results
+        use_mmr: true, // Enable Maximal Marginal Relevance for diverse results
+        mmr_diversity: 0.5, // Balance between relevance (0) and diversity (1)
+        mmr_candidates: 50, // Larger candidate pool for better MMR selection
+        filters: product.category ? { category: product.category } : undefined, // Filter by same category for relevance
       });
     },
     enabled: !!product?.id && !!product?.title,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
   
-  // Format products with cart and wishlist data
-  const products = semanticSearchResponse?.data
-    ?.filter((p) => p.id !== product?.id) // Exclude the current product
-    ?.map((p) =>
-      formatProduct(p, {
+  // Transform recommendations to product format compatible with ProductSwiper
+  const products = recommendationsResponse?.data?.recommendations
+    ?.filter((rec) => String(rec.id) !== String(product?.id)) // Exclude current product
+    ?.slice(0, 12) // Limit to 12 products for the swiper
+    ?.map((rec) => {
+      // Transform recommendation to Tables<"products"> format
+      const productData: Tables<"products"> = {
+        id: String(rec.id),
+        title: rec.title,
+        brand: rec.brand || "",
+        category: rec.category || "",
+        price: rec.price || 0,
+        image_url: rec.image_url || "",
+        description: rec.description || "",
+        stock: 100, // Default stock
+        discount: 0,
+        discount_type: "PERCENTAGE",
+        subtitle: "",
+        category_id: 1,
+        created_at: new Date().toISOString(),
+        slug: null,
+        wholesale_price: rec.price || 0,
+        extra_images_urls: null,
+      };
+      
+      return formatProduct(productData, {
         cart: cart?.data?.map((item) => item.id),
         wishlist: wishlist?.data,
-      })
-    ) || [];
+      });
+    }) || [];
   
   const { data: translation } = useTranslation();
   
