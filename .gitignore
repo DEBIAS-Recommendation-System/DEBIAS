@@ -136,7 +136,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .envrc
 .venv
 env/
@@ -208,3 +207,4 @@ marimo/_lsp/
 __marimo__/
 final_amazon_dec_joined.csv
 data/filtered_2020-Jan_behavior.csv
+config.bat
