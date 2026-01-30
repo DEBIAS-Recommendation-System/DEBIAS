@@ -17,6 +17,11 @@ export default function Items() {
   const { data: cart } = useCart();
   const { data: translation } = useTranslation();
 
+  // Debug logging
+  console.log("🛒 [CART PAGE - Items] Cart data received:", cart);
+  console.log("🛒 [CART PAGE - Items] Cart items:", cart?.data);
+  console.log("🛒 [CART PAGE - Items] Cart items count:", cart?.data?.length);
+
   const sortedCart = cart?.data?.sort((a, b) => {
     if (filter === "price") {
       return (a.price ?? 0) - (b?.price ?? 0);
