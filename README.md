@@ -129,6 +129,37 @@ DEBIAS is designed as a **modular, scalable, and consumer-first platform** that 
 
 ---
 
+## ⚡Qdrant Implementation⚡
+
+DEBIAS leverages **Qdrant** as its high-performance vector database for semantic product search and multimodal retrieval.
+
+### Embedding Models
+
+| Model | Type | Dimensions | Use Case |
+|-------|------|------------|----------|
+| `Qdrant/clip-ViT-B-32-text` | CLIP Text | 512 | Multimodal text queries |
+| `Qdrant/clip-ViT-B-32-vision` | CLIP Vision | 512 | Image similarity search |
+
+### Key Features
+
+- **Multimodal Search**: Query products using text *or* images with CLIP embeddings
+- **Payload Indexing**: Optimized filters for category, brand, and price range
+- **MMR (Maximal Marginal Relevance)**: Balances relevance with diversity in results
+- **HNSW Optimization**: Tuned for e-commerce filtering patterns for memory efficiency
+
+**Parameters:**
+| Parameter | Description |
+|-----------|-------------|
+| `text_query` | Natural language search query |
+| `image_query` | Image search query |
+| `limit` | Number of results (default: 10) |
+| `score_threshold` | Minimum similarity score (0-1) |
+| `category` | Filter by category |
+| `use_mmr` | Enable diverse results |
+| `mmr_diversity` | Balance relevance vs diversity (0-1) |
+
+---
+
 ## 🛠️ Technology Stack
 
 <p align="center">
