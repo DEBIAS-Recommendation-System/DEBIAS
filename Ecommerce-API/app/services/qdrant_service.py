@@ -13,8 +13,14 @@ from qdrant_client.models import (
     Filter,
     FieldCondition,
     MatchValue,
+    PayloadSchemaType,
+    HnswConfigDiff,
 )
-from fastembed import TextEmbedding, ImageEmbedding
+try:
+    from fastembed import TextEmbedding, ImageEmbedding
+except ImportError:
+    # Fallback for newer fastembed versions
+    from fastembed.embedding import TextEmbedding, ImageEmbedding
 import logging
 
 from app.core.config import settings
@@ -144,14 +150,18 @@ class QdrantService:
             raise
 
     def create_collection(
-        self, collection_name: Optional[str] = None, vector_size: Optional[int] = None
+        self,
+        collection_name: Optional[str] = None,
+        vector_size: Optional[int] = None,
+        enable_hnsw_optimization: bool = True,
     ):
         """
-        Create a new collection in Qdrant
+        Create a new collection in Qdrant with optimized settings for e-commerce
 
         Args:
             collection_name: Name of the collection (uses default if not provided)
             vector_size: Size of the vectors (uses model dimension if not provided)
+            enable_hnsw_optimization: Enable HNSW optimizations for e-commerce filtering
         """
         if not self.client:
             self.connect()
@@ -166,16 +176,95 @@ class QdrantService:
                 logger.info(f"Collection '{collection_name}' already exists")
                 return
 
+            # Configure HNSW for e-commerce with heavy filtering
+            hnsw_config = None
+            if enable_hnsw_optimization:
+                hnsw_config = HnswConfigDiff(
+                    m=2,
+                    ef_construct=100,  # Good build-time accuracy
+                    full_scan_threshold=10000,  # Switch to full scan for small result sets
+                )
+
             # Create new collection
             self.client.create_collection(
                 collection_name=collection_name,
-                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+                vectors_config=VectorParams(
+                    size=vector_size,
+                    distance=Distance.COSINE,
+                    hnsw_config=hnsw_config,
+                ),
             )
             logger.info(
                 f"Created collection '{collection_name}' with vector size {vector_size}"
             )
+            if enable_hnsw_optimization:
+                logger.info(
+                    "HNSW optimizations enabled: m=16, ef_construct=100, full_scan_threshold=10000"
+                )
         except Exception as e:
             logger.error(f"Failed to create collection: {str(e)}")
+            raise
+
+    def create_payload_indexes(
+        self, collection_name: Optional[str] = None, fields: Optional[List[str]] = None
+    ) -> bool:
+        """
+        Create payload indexes for frequently filtered fields
+        Optimizes filtered vector search performance for e-commerce
+
+        Args:
+            collection_name: Name of the collection (uses default if not provided)
+            fields: List of field names to index. If None, indexes common e-commerce fields:
+                   - category (keyword index)
+                   - brand (keyword index)
+                   - price (float range index)
+
+        Returns:
+            True if successful
+        """
+        if not self.client:
+            self.connect()
+
+        collection_name = collection_name or self.collection_name
+
+        # Default e-commerce fields if not specified
+        if fields is None:
+            index_configs = [
+                {"field_name": "category", "field_schema": PayloadSchemaType.KEYWORD},
+                {"field_name": "brand", "field_schema": PayloadSchemaType.KEYWORD},
+                {"field_name": "price", "field_schema": PayloadSchemaType.FLOAT},
+            ]
+        else:
+            # Auto-detect field types based on common e-commerce patterns
+            index_configs = []
+            for field in fields:
+                if field in ["category", "brand", "title"]:
+                    schema_type = PayloadSchemaType.KEYWORD
+                elif field in ["price", "rating", "discount"]:
+                    schema_type = PayloadSchemaType.FLOAT
+                elif field in ["product_id", "stock", "views"]:
+                    schema_type = PayloadSchemaType.INTEGER
+                else:
+                    schema_type = PayloadSchemaType.KEYWORD  # Default
+                index_configs.append({"field_name": field, "field_schema": schema_type})
+
+        try:
+            for config in index_configs:
+                self.client.create_payload_index(
+                    collection_name=collection_name,
+                    field_name=config["field_name"],
+                    field_schema=config["field_schema"],
+                )
+                logger.info(
+                    f"Created payload index for '{config['field_name']}' ({config['field_schema']})"
+                )
+
+            logger.info(
+                f"Successfully created {len(index_configs)} payload indexes for collection '{collection_name}'"
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to create payload indexes: {str(e)}")
             raise
 
     def create_text_embedding(self, text: str) -> List[float]:
@@ -389,6 +478,7 @@ class QdrantService:
         use_mmr: bool = False,
         mmr_diversity: float = 0.5,
         mmr_candidates: Optional[int] = None,
+        hnsw_ef: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         Search for similar vectors in Qdrant
@@ -401,10 +491,11 @@ class QdrantService:
             limit: Maximum number of results to return
             score_threshold: Minimum similarity score (0-1)
             collection_name: Name of the collection (uses default if not provided)
-            filter_conditions: Optional filters to apply
+            filter_conditions: Optional filters to apply (e.g., {"category": "Electronics", "brand": "Sony"})
             use_mmr: Enable MMR (Maximal Marginal Relevance) for diverse results
             mmr_diversity: MMR diversity parameter (0.0=relevance, 1.0=diversity)
             mmr_candidates: Number of candidates to fetch before MMR (default: limit * 10)
+            hnsw_ef: HNSW search parameter (higher=more accurate but slower, default: ef_construct value)
 
         Returns:
             List of search results with id, score, and payload
@@ -437,6 +528,11 @@ class QdrantService:
                     ]
                 )
 
+            # Prepare search params
+            search_params = None
+            if hnsw_ef is not None:
+                search_params = qdrant_models.SearchParams(hnsw_ef=hnsw_ef)
+
             # Search with MMR or regular search using query_points API
             if use_mmr:
                 # Use query_points API with MMR for diversity
@@ -453,6 +549,7 @@ class QdrantService:
                     limit=limit,
                     query_filter=query_filter,
                     score_threshold=score_threshold,
+                    search_params=search_params,
                 )
 
                 logger.info(
@@ -467,6 +564,7 @@ class QdrantService:
                     limit=limit,
                     query_filter=query_filter,
                     score_threshold=score_threshold,
+                    search_params=search_params,
                 )
 
                 logger.info(f"Found {len(results.points)} results for query")
@@ -532,7 +630,9 @@ class QdrantService:
             info = self.client.get_collection(collection_name=collection_name)
             return {
                 "name": collection_name,
-                "vectors_count": info.vectors_count,
+                "vectors_count": info.vectors_count
+                if hasattr(info, "vectors_count")
+                else info.points_count,
                 "points_count": info.points_count,
                 "status": info.status,
             }

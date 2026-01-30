@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     qdrant_api_key: str | None = None
     qdrant_collection_name: str = "embeddings"
 
+    # Neo4j Config
+    neo4j_hostname: str = "localhost"
+    neo4j_port: int = 7687
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "testing_password"
+
     class Config:
         env_file = ".env"
 
