@@ -1,3 +1,9 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.db.database import SessionLocal
+from app.models.models import User
+from app.core.security import get_password_hash
+from app.core.config import settings
 from app.routers import (
     products,
     categories,
@@ -8,13 +14,8 @@ from app.routers import (
     events,
     recommendations,
     behavioral_recommendations,
+    orchestrator,
 )
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.db.database import SessionLocal
-from app.models.models import User
-from app.core.security import get_password_hash
-from app.core.config import settings
 
 
 description = """
@@ -84,6 +85,7 @@ app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(recommendations.router)
 app.include_router(behavioral_recommendations.router)
+app.include_router(orchestrator.router)
 
 
 @app.on_event("startup")

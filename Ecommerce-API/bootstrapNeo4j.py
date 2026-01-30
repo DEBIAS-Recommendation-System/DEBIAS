@@ -9,7 +9,7 @@ from neo4j import GraphDatabase
 from app.core.config import settings
 
 EVENTS_CSV_PATH = Path(__file__).resolve().parents[1] / "data" / "filtered_2020-Jan_behavior.csv"
-CHUNK_SIZE = 10000
+CHUNK_SIZE = 5000
 
 # Neo4j connection settings
 NEO4J_URI = f"bolt://{getattr(settings, 'neo4j_hostname', 'localhost')}:7687"

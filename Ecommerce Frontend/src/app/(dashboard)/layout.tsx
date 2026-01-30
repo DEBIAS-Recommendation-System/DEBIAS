@@ -1,22 +1,27 @@
-import React, { useTransition } from "react";
+"use client";
+import React, { useEffect } from "react";
 import Footer from "./ui/Footer";
 import getProfile from "@/api/getProfile";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Nav } from "./ui/Nav/Nav";
-import getTranslation from "@/translation/getTranslation";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-export default async function Layout({
+export default function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user } = await getProfile();
-  if (user?.is_admin) {
-    redirect("/earnings");
-  }
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: user } = await getProfile();
+      if (user?.is_admin) {
+        router.push("/earnings");
+      }
+    };
+    checkAdmin();
+  }, [router]);
+
   return (
     <div className="flex h-full min-h-screen flex-col overflow-x-hidden">
       <Nav />

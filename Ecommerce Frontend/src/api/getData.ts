@@ -49,7 +49,8 @@ export default async function getData<
         error: "User not found",
       };
     }
-    query = (query as { eq: (col: string, val: unknown) => typeof query }).eq("user_id", user_id);
+    // @ts-ignore - Supabase type inference issue
+    query = query.eq("user_id", user_id);
   }
   if (sort) {
     query = query.order(sort.column as string, { ascending: sort.ascending });

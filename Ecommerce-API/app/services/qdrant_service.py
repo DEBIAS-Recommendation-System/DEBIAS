@@ -3,7 +3,7 @@ Qdrant Vector Database Service
 Handles connection to Qdrant and embedding operations
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from qdrant_client import QdrantClient
 from qdrant_client import models as qdrant_models
 from qdrant_client.models import (
@@ -16,7 +16,11 @@ from qdrant_client.models import (
     PayloadSchemaType,
     HnswConfigDiff,
 )
-from fastembed import TextEmbedding, ImageEmbedding
+from fastembed.text.text_embedding import TextEmbedding
+
+# ImageEmbedding not available in current fastembed version
+ImageEmbedding = None
+
 import logging
 
 from app.core.config import settings

@@ -5,6 +5,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 import useTranslation from "@/translation/useTranslation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { z } from "zod";
 
@@ -12,29 +13,29 @@ export default function LoginWithPassword() {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = React.useState<string>("");
   const { data: translation } = useTranslation();
+  const router = useRouter();
   const loginSchema = z.object({
-    email: z
+    username: z
       .string({
         message: translation?.lang["{ELEMENT} must be a string"].replace(
           "{ELEMENT}",
-          "Email",
+          "Username",
         ),
       })
-      .email(translation?.lang["Invalid email address"]),
+      .min(3, "Username must be at least 3 characters"),
     password: z
       .string({
         message: translation?.lang["{ELEMENT} must be a string"].replace(
           "{ELEMENT}",
           "Password",
         ),
-      })
-      .min(6, translation?.lang["Password must be at least 6 characters"]),
+      }),
   });
   const queryClient = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationFn: async (formObject: FormData) => {
       const data = Object.fromEntries(formObject) as {
-        email: string;
+        username: string;
         password: string;
       };
 
@@ -59,9 +60,9 @@ export default function LoginWithPassword() {
         throw err;
       }
 
-      const email = formObject.get("email") as string;
+      const username = formObject.get("username") as string;
       const password = formObject.get("password") as string;
-      const { error } = await login({ email, password });
+      const { error } = await login({ username, password });
 
       if (error) {
         setErrors({ general: error.message });
@@ -71,6 +72,8 @@ export default function LoginWithPassword() {
     onSuccess: () => {
       queryClient.invalidateQueries();
       setSuccessMessage(translation?.lang["Login successful"] ?? "");
+      // Navigate to home page after successful login
+      router.push("/");
     },
   });
 
@@ -80,23 +83,19 @@ export default function LoginWithPassword() {
         {translation?.lang["Login"]}
       </h2>
       <p className="text-gray-600">
-        {
-          translation?.lang[
-            "If you have an account, log in with your email address."
-          ]
-        }
+        If you have an account, log in with your username.
       </p>
 
       <Input
-        name="email"
-        label={translation?.lang["email"] ?? ""}
-        type="email"
+        name="username"
+        label="Username"
+        type="text"
         required
-        error={errors.email}
+        error={errors.username}
       />
       <Input
         name="password"
-        label={translation?.lang["Password"] ?? ""}
+        label={translation?.lang["Password"] ?? "Password"}
         type="password"
         required
         error={errors.password}

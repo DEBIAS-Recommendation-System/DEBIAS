@@ -507,6 +507,209 @@ class Neo4jService:
             result = session.run(query, **params)
             return [dict(record) for record in result]
 
+    def get_recent_viewed_products(
+        self,
+        user_id: int,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Get the user's most recently viewed products (excluding purchases).
+        Used for "based on your recent activity" recommendations.
+        
+        Args:
+            user_id: The user ID
+            limit: Maximum number of products
+            
+        Returns:
+            List of recently viewed products with timestamps
+        """
+        query = """
+        MATCH (u:User {user_id: $user_id})-[r:INTERACTED]->(p:Product)
+        WHERE r.event_type IN ['view', 'cart']
+        
+        WITH p, r, max(r.event_time) AS last_interaction
+        ORDER BY last_interaction DESC
+        
+        RETURN DISTINCT p.product_id AS product_id,
+               r.event_type AS event_type,
+               last_interaction AS event_time
+        LIMIT $limit
+        """
+        
+        with self.session() as session:
+            result = session.run(query, user_id=user_id, limit=limit)
+            return [dict(record) for record in result]
+
+    def has_recent_purchase(
+        self,
+        user_id: int,
+        lookback_hours: int = 24
+    ) -> Dict[str, Any]:
+        """
+        Check if user has made a recent purchase (within lookback period).
+        Used to switch recommendation strategy post-purchase.
+        
+        Args:
+            user_id: The user ID
+            lookback_hours: Hours to look back for purchases
+            
+        Returns:
+            Dict with has_purchase flag and last purchased product info
+        """
+        query = """
+        MATCH (u:User {user_id: $user_id})-[r:INTERACTED]->(p:Product)
+        WHERE r.event_type = 'purchase'
+        
+        WITH p, r
+        ORDER BY r.event_time DESC
+        LIMIT 1
+        
+        RETURN p.product_id AS product_id,
+               r.event_time AS event_time,
+               r.session_id AS session_id
+        """
+        
+        with self.session() as session:
+            result = session.run(query, user_id=user_id)
+            record = result.single()
+            
+            if record:
+                return {
+                    "has_purchase": True,
+                    "last_purchased_product_id": record["product_id"],
+                    "purchase_time": record["event_time"],
+                    "session_id": record["session_id"]
+                }
+            return {"has_purchase": False}
+
+    def get_complementary_products(
+        self,
+        product_id: int,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Get products that complement a purchased product.
+        "Users who bought this also bought..." - for post-purchase recommendations.
+        
+        This differs from frequently_bought_together by looking at purchases
+        made AFTER the initial product, indicating complementary items.
+        
+        Args:
+            product_id: The purchased product ID
+            limit: Maximum number of products
+            
+        Returns:
+            List of complementary products with scores
+        """
+        query = """
+        // Find users who purchased this product
+        MATCH (p:Product {product_id: $product_id})<-[r1:INTERACTED]-(u:User)
+        WHERE r1.event_type = 'purchase'
+        
+        // Find what else they purchased (not in the same session = complementary)
+        MATCH (u)-[r2:INTERACTED]->(other:Product)
+        WHERE other.product_id <> $product_id
+          AND r2.event_type = 'purchase'
+          AND (r2.session_id IS NULL OR r1.session_id IS NULL OR r2.session_id <> r1.session_id)
+        
+        WITH other.product_id AS product_id,
+             count(DISTINCT u) AS buyer_count,
+             count(r2) AS purchase_count
+        
+        RETURN product_id,
+               buyer_count,
+               purchase_count,
+               (buyer_count * 2 + purchase_count) AS score
+        ORDER BY score DESC
+        LIMIT $limit
+        """
+        
+        with self.session() as session:
+            result = session.run(query, product_id=product_id, limit=limit)
+            return [dict(record) for record in result]
+
+    def get_category_trending(
+        self,
+        category: str,
+        limit: int = 10,
+        event_types: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get trending products within a specific category.
+        Requires products to have category metadata in Neo4j.
+        
+        Args:
+            category: Category to filter by
+            limit: Maximum number of products
+            event_types: Filter by event types
+            
+        Returns:
+            List of trending products in category
+        """
+        if event_types:
+            query = """
+            MATCH (u:User)-[r:INTERACTED]->(p:Product)
+            WHERE p.category = $category
+              AND r.event_type IN $event_types
+            
+            WITH p.product_id AS product_id,
+                 count(r) AS total_interactions,
+                 count(DISTINCT u) AS unique_users
+            
+            RETURN product_id, total_interactions, unique_users
+            ORDER BY total_interactions DESC
+            LIMIT $limit
+            """
+            params = {"category": category, "limit": limit, "event_types": event_types}
+        else:
+            query = """
+            MATCH (u:User)-[r:INTERACTED]->(p:Product)
+            WHERE p.category = $category
+            
+            WITH p.product_id AS product_id,
+                 count(r) AS total_interactions,
+                 count(DISTINCT u) AS unique_users
+            
+            RETURN product_id, total_interactions, unique_users
+            ORDER BY total_interactions DESC
+            LIMIT $limit
+            """
+            params = {"category": category, "limit": limit}
+        
+        with self.session() as session:
+            result = session.run(query, **params)
+            return [dict(record) for record in result]
+
+    def get_user_purchase_history(
+        self,
+        user_id: int,
+        limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """
+        Get the user's purchase history.
+        
+        Args:
+            user_id: The user ID
+            limit: Maximum number of purchases
+            
+        Returns:
+            List of purchased products
+        """
+        query = """
+        MATCH (u:User {user_id: $user_id})-[r:INTERACTED]->(p:Product)
+        WHERE r.event_type = 'purchase'
+        
+        RETURN p.product_id AS product_id,
+               r.event_time AS event_time,
+               r.session_id AS session_id
+        ORDER BY r.event_time DESC
+        LIMIT $limit
+        """
+        
+        with self.session() as session:
+            result = session.run(query, user_id=user_id, limit=limit)
+            return [dict(record) for record in result]
+
     # =========================================================================
     # RE-RANKING SUPPORT (for use with semantic search results)
     # =========================================================================

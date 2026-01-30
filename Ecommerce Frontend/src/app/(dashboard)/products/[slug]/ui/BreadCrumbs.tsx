@@ -1,13 +1,13 @@
 "use client";
-import useProductBySlug from "@/hooks/data/products/useProductBySlug";
+import useProductById from "@/hooks/data/products/useProductById";
 import useTranslation from "@/translation/useTranslation";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 export default function BreadCrumbs() {
-  const { slug } = useParams();
-  const decodedSlug = decodeURIComponent(Array.isArray(slug) ? slug[0] : slug);
-  const { data } = useProductBySlug(String(decodedSlug));
+  const { slug } = useParams(); // This is actually the product ID
+  const productId = Array.isArray(slug) ? slug[0] : slug;
+  const { data } = useProductById(String(productId));
   const product = data?.data;
   const { data: translation } = useTranslation();
   return (
@@ -24,13 +24,13 @@ export default function BreadCrumbs() {
           href={"/products"}
           className="cursor-pointer leading-6 transition-all ease-linear hover:font-medium hover:text-slate-500 hover:underline"
         >
-          {translation?.lang["toys"]}
+          {translation?.lang["Products"] || "Products"}
         </Link>
         {product?.title && (
           <>
             <span>{">"}</span>
             <Link
-              href={`products/${slug}`}
+              href={`products/${productId}`}
               className="cursor-pointer leading-6 transition-all ease-linear hover:font-medium hover:text-slate-500 hover:underline"
             >
               {product?.title}

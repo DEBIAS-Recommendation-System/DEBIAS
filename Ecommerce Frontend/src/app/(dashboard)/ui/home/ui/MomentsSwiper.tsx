@@ -2,6 +2,7 @@
 import CustomSwiper from "@/app/ui/Swiper";
 import useTranslation from "@/translation/useTranslation";
 import Image from "next/image";
+import Link from "next/link";
 
 // Local categories data
 const categories = [
@@ -88,9 +89,10 @@ export default function MomentsSwiper() {
             const bgColor = categoryColors[category.name] || "bg-slate-500";
             
             return (
-              <div
+              <Link
                 key={category.id}
-                className={`group relative h-full overflow-hidden rounded-xl border border-opacity-20 ${bgColor} p-8 transition-all duration-300 hover:shadow-xl max-[600px]:p-6`}
+                href={`/products?category=${encodeURIComponent(category.name)}`}
+                className={`group relative h-full overflow-hidden rounded-xl border border-opacity-20 ${bgColor} p-8 transition-all duration-300 hover:shadow-xl max-[600px]:p-6 block cursor-pointer`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 <div className="relative flex h-full flex-col items-center justify-center gap-4 text-center">
@@ -105,7 +107,7 @@ export default function MomentsSwiper() {
                   </div>
                   <h3 className="text-lg font-bold text-white">{category.name}</h3>
                 </div>
-              </div>
+              </Link>
             );
           })}
         />

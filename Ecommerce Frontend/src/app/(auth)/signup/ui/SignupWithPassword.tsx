@@ -13,6 +13,22 @@ export default function SignupWithPassword() {
   const queryClient = useQueryClient();
   const schema = z
     .object({
+      full_name: z
+        .string({
+          message: translation?.lang["{ELEMENT} must be a string"].replace(
+            "{ELEMENT}",
+            "Full Name",
+          ),
+        })
+        .min(2, "Full name must be at least 2 characters"),
+      username: z
+        .string({
+          message: translation?.lang["{ELEMENT} must be a string"].replace(
+            "{ELEMENT}",
+            "Username",
+          ),
+        })
+        .min(3, "Username must be at least 3 characters"),
       email: z
         .string({
           message: translation?.lang["{ELEMENT} must be a string"].replace(
@@ -27,8 +43,7 @@ export default function SignupWithPassword() {
             "{ELEMENT}",
             "Password",
           ),
-        })
-        .min(6, translation?.lang["Password must be at least 6 characters"]),
+        }),
       confirm: z.string({
         message: translation?.lang["{ELEMENT} must be a string"].replace(
           "{ELEMENT}",
@@ -50,6 +65,8 @@ export default function SignupWithPassword() {
       path: ["confirm"],
     });
   const [fieldErrors, setFieldErrors] = React.useState({
+    full_name: "",
+    username: "",
     email: "",
     password: "",
     confirm: "",
@@ -60,6 +77,8 @@ export default function SignupWithPassword() {
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: FormData) => {
       const formObject = Object.fromEntries(formData) as {
+        full_name: string;
+        username: string;
         email: string;
         password: string;
         confirm: string;
@@ -69,6 +88,8 @@ export default function SignupWithPassword() {
       const policies = formObject.policies === "on";
 
       const data = {
+        full_name: formObject.full_name,
+        username: formObject.username,
         email: formObject.email,
         password: formObject.password,
         confirm: formObject.confirm,
@@ -79,6 +100,8 @@ export default function SignupWithPassword() {
       try {
         schema.parse(data);
         setFieldErrors({
+          full_name: "",
+          username: "",
           email: "",
           password: "",
           confirm: "",
@@ -88,6 +111,8 @@ export default function SignupWithPassword() {
         setSuccessMessage("");
         if (err instanceof z.ZodError) {
           const errors = {
+            full_name: "",
+            username: "",
             email: "",
             password: "",
             confirm: "",
@@ -101,6 +126,8 @@ export default function SignupWithPassword() {
           setFieldErrors(errors);
         } else {
           setFieldErrors({
+            full_name: "",
+            username: "",
             email: "",
             password: "",
             confirm: "",
@@ -111,8 +138,8 @@ export default function SignupWithPassword() {
       }
 
       // Proceed with signup if validation passes
-      const { email, password } = data;
-      const { error } = await signUp({ email, password });
+      const { full_name, username, email, password } = data;
+      const { error } = await signUp({ full_name, username, email, password });
       if (error?.message) {
         setFieldErrors({
           ...fieldErrors,
@@ -133,6 +160,20 @@ export default function SignupWithPassword() {
         {translation?.lang["Create Account"]}
       </h2>
 
+      <Input
+        name="full_name"
+        label={translation?.lang["Full name"] ?? "Full Name"}
+        type="text"
+        required
+        error={fieldErrors.full_name}
+      />
+      <Input
+        name="username"
+        label="Username"
+        type="text"
+        required
+        error={fieldErrors.username}
+      />
       <Input
         name="email"
         label="Email"

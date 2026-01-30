@@ -36,8 +36,7 @@ export default function Content() {
   const discountParam = searchParams.get("discount");
   
   const filters: ProductsFilterType = {
-    category_id:
-      categories?.find((e) => e.name === categoryParam)?.id ?? null,
+    category_id: null, // Deprecated: using category name instead
     priceRange: [
       minPriceParam ? Number(minPriceParam) : 0,
       maxPriceParam ? Number(maxPriceParam) : 0,
@@ -61,12 +60,13 @@ export default function Content() {
     },
     {
       label: translation?.lang["Newest"],
-      value: "created_at",
+      value: "product_id", // Sort by product_id instead of created_at since we don't have that field
     },
-    {
-      label: translation?.lang["Products on sale"],
-      value: "discount",
-    },
+    // Commented out - products don't have discounts yet
+    // {
+    //   label: translation?.lang["Products on sale"],
+    //   value: "discount",
+    // },
     {
       label: translation?.lang["Name"],
       value: "title",
@@ -84,9 +84,7 @@ export default function Content() {
     limit,
     sort,
     filters: activeFilters,
-    match: filters.category_id
-      ? { category_id: filters.category_id }
-      : undefined,
+    category: categoryParam || undefined,
   };
   
   const { data: products, isLoading } = useFormattedProducts(queryArgs);

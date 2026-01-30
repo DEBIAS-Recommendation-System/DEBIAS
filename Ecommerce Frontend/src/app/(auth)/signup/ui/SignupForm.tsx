@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import SignupWithPassword from "./SignupWithPassword";
-import SignupWithGoogle from "./SignupWithGoogle";
+// import SignupWithGoogle from "./SignupWithGoogle"; // Commented out - OAuth provider not configured yet
 import useTranslation from "@/translation/useTranslation";
 
 export default function SignupForm() {
@@ -9,6 +9,7 @@ export default function SignupForm() {
   return (
     <div className="mx-auto flex h-fit w-full max-w-[40rem] flex-col gap-3 rounded-lg border p-10 shadow-lg">
       <SignupWithPassword />
+      {/* Commented out - OAuth provider not configured yet
       <div className="mt-6 flex w-full flex-col items-center justify-center gap-6">
         <div className="mx-auto flex w-full items-center justify-center space-x-3">
           <hr className="w-36 border-gray-300 max-sm:flex-1" />
@@ -19,6 +20,7 @@ export default function SignupForm() {
         </div>
         <SignupWithGoogle />
       </div>
+      */}
     </div>
   );
 }

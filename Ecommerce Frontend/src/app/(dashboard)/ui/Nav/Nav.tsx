@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React from "react";
+import React, { Suspense } from "react";
 import { NavbarItemsSubmenu } from "./NavbarItemsSubmenu";
 import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
@@ -32,6 +32,7 @@ export function Nav() {
           <span className="text-2xl font-bold text-slate-900">DEBIAS</span>
         </Link>
         <div className="flex h-full flex-row items-center justify-center gap-6 max-[830px]:hidden">
+        <Suspense fallback={<div className="h-10 w-96 animate-pulse bg-gray-200" />}>
         {menuItems.map((item) => (
           <NavbarItemsSubmenu
             {...{
@@ -48,6 +49,7 @@ export function Nav() {
             key={item.title}
           />
         ))}
+        </Suspense>
         </div>
         <div className="flex flex-row items-center justify-evenly gap-12 max-[530px]:gap-2">
         <SearchBar />

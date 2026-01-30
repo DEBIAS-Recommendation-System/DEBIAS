@@ -39,6 +39,10 @@ export function ProductsSection() {
     }
   }, [page, products?.meta?.has_next_page, queryClient, limit]);
   const { data: translation } = useTranslation();
+  
+  // Debug logging
+  console.log("ProductsSection - isLoading:", isLoading, "error:", error, "products:", products, "status:", status);
+  
   return (
     <section className="px-6 py-20" aria-labelledby="products-heading">
       <div className="mx-auto max-w-7xl">
@@ -67,9 +71,17 @@ export function ProductsSection() {
           <div className="flex h-full w-full items-center justify-center min-h-[400px]">
             <Loading />
           </div>
+        ) : error ? (
+          <div className="flex h-full w-full items-center justify-center min-h-[400px]">
+            <p className="text-red-500">Error loading products: {JSON.stringify(error)}</p>
+          </div>
+        ) : !products?.data || products.data.length === 0 ? (
+          <div className="flex h-full w-full items-center justify-center min-h-[400px]">
+            <p className="text-gray-500">No products found. Check console for details.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products?.data?.map((product, key) => (
+            {products.data.map((product, key) => (
               <Product key={key} {...product} />
             ))}
           </div>

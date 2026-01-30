@@ -13,6 +13,7 @@ export default async function getProducts({
   search,
   match,
   minStock,
+  category,
 }: {
   tableName: "products";
   count?: {
@@ -51,11 +52,22 @@ export default async function getProducts({
       params.append("search", search.value);
     }
 
-    // Add sorting (Note: FastAPI may not support this yet - will be filtered client-side)
-    // if (sort) {
-    //   params.append("sort_by", sort.column as string);
-    //   params.append("order", sort.ascending ? "asc" : "desc");
-    // }
+    // Add category filter
+    if (category) {
+      params.append("category", category);
+    }
+
+    // Add price range filter
+    if (priceRange && priceRange.length === 2) {
+      params.append("minPrice", String(priceRange[0]));
+      params.append("maxPrice", String(priceRange[1]));
+    }
+
+    // Add sorting parameters - FastAPI now supports this
+    if (sort) {
+      params.append("sort_by", sort.column as string);
+      params.append("order", sort.ascending ? "asc" : "desc");
+    }
 
     // Note: FastAPI backend may need additional endpoints for advanced filtering
     // For now, we'll fetch and filter client-side for compatibility
@@ -81,7 +93,21 @@ export default async function getProducts({
     console.log("FastAPI result:", result);
     
     // FastAPI returns { message, data, total_count }
-    let products = result.data || [];
+    // Transform product_id to id and add missing fields for frontend compatibility
+    let products = (result.data || []).map((product: any) => ({
+      ...product,
+      id: String(product.product_id), // Convert product_id to id (and ensure it's a string)
+      stock: product.stock ?? 100, // Default stock if missing
+      discount: product.discount ?? 0, // Default no discount
+      discount_type: product.discount_type ?? "PERCENTAGE", // Default discount type
+      description: product.description ?? "",
+      subtitle: product.subtitle ?? "",
+      category_id: product.category_id ?? 1,
+      created_at: product.created_at ?? new Date().toISOString(),
+      slug: product.slug ?? null,
+      wholesale_price: product.wholesale_price ?? product.price,
+      extra_images_urls: product.extra_images_urls ?? null,
+    }));
     const totalCount = result.total_count || 0; // Use the API's total count
 
     // Apply client-side filters that aren't supported by the API yet
