@@ -8,10 +8,10 @@ events from RabbitMQ and process them into Neo4j and Qdrant.
 Usage:
     # Start single worker
     python run_worker.py --queue neo4j
-    
+
     # Start multiple workers
     python run_worker.py --queue neo4j --workers 3
-    
+
     # Start with custom prefetch
     python run_worker.py --queue neo4j --prefetch 20
 """
@@ -32,24 +32,21 @@ from app.workers.event_processor import Neo4jEventProcessor, QdrantEventProcesso
 def setup_logging(log_level: str = "INFO"):
     """
     Setup logging configuration.
-    
+
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
     """
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
-        format='%(asctime)s - %(name)s - %(levelname)s - [%(processName)s] - %(message)s',
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler('worker.log')
-        ]
+        format="%(asctime)s - %(name)s - %(levelname)s - [%(processName)s] - %(message)s",
+        handlers=[logging.StreamHandler(), logging.FileHandler("worker.log")],
     )
 
 
 def start_worker(queue_type: str, prefetch_count: int, worker_id: int = 0):
     """
     Start a worker process.
-    
+
     Args:
         queue_type: Type of queue to process ('neo4j' or 'qdrant')
         prefetch_count: Number of messages to prefetch
@@ -57,7 +54,7 @@ def start_worker(queue_type: str, prefetch_count: int, worker_id: int = 0):
     """
     logger = logging.getLogger(__name__)
     logger.info(f"Starting worker #{worker_id} for queue: {queue_type}")
-    
+
     try:
         if queue_type == "neo4j":
             worker = Neo4jEventProcessor()
@@ -68,7 +65,7 @@ def start_worker(queue_type: str, prefetch_count: int, worker_id: int = 0):
         else:
             logger.error(f"Unknown queue type: {queue_type}")
             sys.exit(1)
-            
+
     except KeyboardInterrupt:
         logger.info(f"Worker #{worker_id} stopped by user")
     except Exception as e:
@@ -94,43 +91,40 @@ Examples:
   
   # Start with debug logging
   python run_worker.py --queue neo4j --log-level DEBUG
-        """
+        """,
     )
-    
+
     parser.add_argument(
-        '--queue',
-        choices=['neo4j', 'qdrant'],
+        "--queue",
+        choices=["neo4j", "qdrant"],
         required=True,
-        help='Queue to process events from'
+        help="Queue to process events from",
     )
-    
+
     parser.add_argument(
-        '--workers',
-        type=int,
-        default=1,
-        help='Number of worker processes (default: 1)'
+        "--workers", type=int, default=1, help="Number of worker processes (default: 1)"
     )
-    
+
     parser.add_argument(
-        '--prefetch',
+        "--prefetch",
         type=int,
         default=10,
-        help='Number of messages to prefetch (default: 10)'
+        help="Number of messages to prefetch (default: 10)",
     )
-    
+
     parser.add_argument(
-        '--log-level',
-        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
-        default='INFO',
-        help='Logging level (default: INFO)'
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        default="INFO",
+        help="Logging level (default: INFO)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Setup logging
     setup_logging(args.log_level)
     logger = logging.getLogger(__name__)
-    
+
     logger.info("=" * 60)
     logger.info("Event Processor Worker Manager")
     logger.info("=" * 60)
@@ -139,7 +133,7 @@ Examples:
     logger.info(f"Prefetch: {args.prefetch}")
     logger.info(f"Log Level: {args.log_level}")
     logger.info("=" * 60)
-    
+
     if args.workers == 1:
         # Run single worker in main process
         logger.info("Starting single worker in main process")
@@ -147,24 +141,24 @@ Examples:
     else:
         # Run multiple workers in separate processes
         logger.info(f"Starting {args.workers} worker processes")
-        
+
         processes = []
-        
+
         try:
             for i in range(args.workers):
                 process = multiprocessing.Process(
                     target=start_worker,
                     args=(args.queue, args.prefetch, i),
-                    name=f"Worker-{i}"
+                    name=f"Worker-{i}",
                 )
                 process.start()
                 processes.append(process)
                 logger.info(f"Started worker process #{i} (PID: {process.pid})")
-            
+
             # Wait for all processes
             for process in processes:
                 process.join()
-                
+
         except KeyboardInterrupt:
             logger.info("Shutting down workers...")
             for process in processes:
@@ -179,5 +173,5 @@ Examples:
             raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
