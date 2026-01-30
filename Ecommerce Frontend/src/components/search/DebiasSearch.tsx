@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { productsApi } from '@/api/fastapi';
 import { ProductBase } from '@/types/fastapi';
 import { PaginationParams } from '@/types/fastapi';
@@ -134,10 +135,11 @@ function ProductCard({ product }: { product: ProductBase }) {
     <div className="product-card bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden">
       {/* Product Image */}
       <div className="relative h-48 bg-gray-100">
-        <img
-          src={product.imgUrl}
+        <Image
+          src={product.imgUrl || '/product/placeholder.png'}
           alt={product.title}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
       </div>
 
