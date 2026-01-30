@@ -96,7 +96,8 @@ export default async function getProducts({
     // Transform product_id to id and add missing fields for frontend compatibility
     let products = (result.data || []).map((product: any) => ({
       ...product,
-      id: String(product.product_id), // Convert product_id to id (and ensure it's a string)
+      id: String(product.product_id || product.id), // Convert product_id to id (and ensure it's a string)
+      imgUrl: product.image_url || product.imgUrl || null, // Map image_url to imgUrl
       stock: product.stock ?? 100, // Default stock if missing
       discount: product.discount ?? 0, // Default no discount
       discount_type: product.discount_type ?? "PERCENTAGE", // Default discount type

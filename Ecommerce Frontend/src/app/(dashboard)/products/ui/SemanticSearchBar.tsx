@@ -213,7 +213,7 @@ function SearchResultProduct({
 }) {
   return (
     <Link
-      href={`/products/${product.id}`}
+      href={`/products/${product.id || product.product_id}`}
       onClick={() => {
         setValue("");
         setIsOpen(false);

@@ -155,7 +155,7 @@ function SearchBarProduct({
 }) {
   return (
     <Link
-      href={`/products/${product?.id}`}
+      href={`/products/${product?.id || product?.product_id}`}
       key={product?.id}
       className="flex cursor-pointer flex-row items-start gap-2 border-b border-gray-300 p-2 hover:bg-gray-100"
       onClick={() => {

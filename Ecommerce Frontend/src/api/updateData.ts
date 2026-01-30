@@ -15,7 +15,7 @@ export default async function updateData<ITableName extends dbTableType>({
   data: Tables<ITableName>[] | null;
   error: PostgrestError | null;
 }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from(tableName)
     .update(payload as any)

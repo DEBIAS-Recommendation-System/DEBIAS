@@ -8,7 +8,7 @@ export default async function signInWithOAuth({
 }: {
   provider: Provider;
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const headersList = headers();
   const headerUrl = headersList.get("host") || "";

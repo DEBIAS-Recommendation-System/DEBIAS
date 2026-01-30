@@ -34,13 +34,6 @@ export default function UserMenu() {
       ),
       href: "/Orders",
     },
-    {
-      title: translation?.lang["Wishlist"],
-      icon: (
-        <FaHeart className="ml-1 size-6 text-gray-500 group-hover:text-white" />
-      ),
-      href: "/wishlist",
-    },
   ];
   return (
     <>

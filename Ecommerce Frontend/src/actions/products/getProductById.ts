@@ -30,6 +30,7 @@ export default async function getProductById(
     const product = result.data ? {
       ...result.data,
       id: String(result.data.product_id), // Convert product_id to id (and ensure it's a string)
+      imgUrl: result.data.image_url || result.data.imgUrl || null, // Map image_url to imgUrl
       stock: result.data.stock ?? 100,
       discount: result.data.discount ?? 0,
       discount_type: result.data.discount_type ?? "PERCENTAGE",

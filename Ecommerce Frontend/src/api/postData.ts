@@ -13,7 +13,7 @@ export default async function postData<ITableName extends dbTableType>({
   data: Tables<ITableName>[] | null;
   error: PostgrestError | null;
 }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from(tableName)
     .insert(payload as any)

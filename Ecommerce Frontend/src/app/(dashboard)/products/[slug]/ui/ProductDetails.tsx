@@ -60,12 +60,16 @@ export default function ProductDetails() {
                 ].filter(Boolean).map((url) => (
                   <Image
                     key={url}
-                    className="object-contain w-full h-full"
+                    className="object-contain w-full h-full p-4"
                     width={800}
                     height={800}
-                    src={url ?? ""}
+                    src={url ?? "/product/placeholder.png"}
                     alt={product?.title || "Product Image"}
                     priority
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/product/placeholder.png";
+                    }}
                   />
                 ))}
               />
