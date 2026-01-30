@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import useTranslation from "@/translation/useTranslation";
 
 // Dynamic import to prevent SSR issues with Lottie Player
 const Player = dynamic(
@@ -17,6 +18,7 @@ export default function Error({
   reset: () => void;
 }) {
   const Router = useRouter();
+  const { data: translation } = useTranslation();
   useEffect(() => {
     // Log the error to an error reporting service
     console.error("ui error :" + error);

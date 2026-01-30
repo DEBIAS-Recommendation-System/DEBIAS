@@ -13,6 +13,7 @@ export default async function getProducts({
   search,
   match,
   minStock,
+  category,
 }: {
   tableName: "products";
   count?: {
@@ -51,11 +52,22 @@ export default async function getProducts({
       params.append("search", search.value);
     }
 
-    // Add sorting (Note: FastAPI may not support this yet - will be filtered client-side)
-    // if (sort) {
-    //   params.append("sort_by", sort.column as string);
-    //   params.append("order", sort.ascending ? "asc" : "desc");
-    // }
+    // Add category filter
+    if (category) {
+      params.append("category", category);
+    }
+
+    // Add price range filter
+    if (priceRange && priceRange.length === 2) {
+      params.append("minPrice", String(priceRange[0]));
+      params.append("maxPrice", String(priceRange[1]));
+    }
+
+    // Add sorting parameters - FastAPI now supports this
+    if (sort) {
+      params.append("sort_by", sort.column as string);
+      params.append("order", sort.ascending ? "asc" : "desc");
+    }
 
     // Note: FastAPI backend may need additional endpoints for advanced filtering
     // For now, we'll fetch and filter client-side for compatibility

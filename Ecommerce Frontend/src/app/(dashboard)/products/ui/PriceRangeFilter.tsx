@@ -6,13 +6,57 @@ import useTranslation from "@/translation/useTranslation";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import createNewPathname from "@/helpers/createNewPathname";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
 export default function PriceRangeFilter() {
   const minPriceSearchParams = useSearchParams().get("minPrice");
   const maxPriceSearchParams = useSearchParams().get("maxPrice");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState<number[]>([5, 999]);
+  
+  // State for price range from database
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+  const [value, setValue] = useState<number[]>([0, 1000]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch price range from API on mount
+  useEffect(() => {
+    const fetchPriceRange = async () => {
+      try {
+        const response = await fetch(`${API_URL}/products/price-range`);
+        const result = await response.json();
+        if (result.data) {
+          const { min_price, max_price } = result.data;
+          const min = Math.floor(min_price);
+          const max = Math.ceil(max_price);
+          
+          setPriceRange({ min, max });
+          
+          // Only set slider values if URL params are not present
+          if (!minPriceSearchParams && !maxPriceSearchParams) {
+            setValue([min, max]);
+          } else {
+            // Use URL params if they exist
+            const urlMin = minPriceSearchParams ? Number(minPriceSearchParams) : min;
+            const urlMax = maxPriceSearchParams ? Number(maxPriceSearchParams) : max;
+            setValue([urlMin, urlMax]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch price range:", error);
+        // Fallback to default values
+        setPriceRange({ min: 0, max: 1000 });
+        if (!minPriceSearchParams && !maxPriceSearchParams) {
+          setValue([0, 1000]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPriceRange();
+  }, []); // Empty dependency array - only run once on mount
 
   const debouncedOnChange = useCallback(
     debounce((newValue: number[]) => {
@@ -30,7 +74,7 @@ export default function PriceRangeFilter() {
         },
       );
     }, 1500),
-    [value],
+    [pathname, searchParams, router],
   );
 
   useEffect(() => {
@@ -41,24 +85,37 @@ export default function PriceRangeFilter() {
   }, [value, debouncedOnChange]);
 
   useEffect(() => {
+    // Don't update if still loading
+    if (isLoading) return;
+    
+    // Only sync from URL params if they've actually changed
     if (minPriceSearchParams && Number(minPriceSearchParams) !== value[0]) {
       setValue((prev) => [Number(minPriceSearchParams), prev[1]]);
     }
     if (maxPriceSearchParams && Number(maxPriceSearchParams) !== value[1]) {
       setValue((prev) => [prev[0], Number(maxPriceSearchParams)]);
     }
-  }, [minPriceSearchParams, maxPriceSearchParams]);
+  }, [minPriceSearchParams, maxPriceSearchParams, isLoading]);
 
   const validateAndSetValue = (newValue: number[]) => {
     const [min, max] = newValue;
+    // Ensure min doesn't exceed max
     if (min > max) {
-      setValue([max, max]); // Adjust min to match max if invalid
+      setValue([max, max]);
     } else {
       setValue(newValue);
     }
   };
 
   const { data: translation } = useTranslation();
+  
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-start justify-center bg-white">
+        <span className="mb-1 text-sm font-medium uppercase">Loading price range...</span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -77,9 +134,9 @@ export default function PriceRangeFilter() {
           validateAndSetValue(newValue as number[]);
         }}
         value={value}
-        defaultValue={[0, 999]}
-        max={999}
-        min={0}
+        defaultValue={[priceRange.min, priceRange.max]}
+        max={priceRange.max}
+        min={priceRange.min}
         valueLabelDisplay="auto"
         getAriaValueText={(value) => String(value)}
       />
@@ -87,9 +144,12 @@ export default function PriceRangeFilter() {
         <input
           type="number"
           value={value[0]}
+          min={priceRange.min}
+          max={priceRange.max}
           className="h-[2rem] w-full rounded-sm border border-gray-500 text-center focus:outline-color8"
+          aria-label="Minimum price"
           onChange={(e) => {
-            const newMin = Math.max(0, Number(e.target.value));
+            const newMin = Math.max(priceRange.min, Number(e.target.value));
             validateAndSetValue([newMin, value[1]]);
           }}
         />
@@ -97,7 +157,10 @@ export default function PriceRangeFilter() {
         <input
           type="number"
           value={value[1]}
+          min={priceRange.min}
+          max={priceRange.max}
           className="h-[2rem] w-full rounded-sm border border-gray-500 text-center focus:outline-color8"
+          aria-label="Maximum price"
           onChange={(e) => {
             const newMax = Math.min(Number(e.target.value), 999);
             validateAndSetValue([value[0], newMax]);

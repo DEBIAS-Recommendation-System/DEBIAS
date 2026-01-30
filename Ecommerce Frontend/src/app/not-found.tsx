@@ -1,12 +1,15 @@
+"use client";
 import React from "react";
 import NotFoundPage from "/public/NotFound/NotFound.png";
 import NotFoundPanda from "/public/NotFound/NotFoundPanda.png";
 import Image from "next/image";
 import Link from "next/link";
+import useTranslation from "@/translation/useTranslation";
 
 export const dynamic = 'force-dynamic';
 
 function NotFound() {
+  const { data: translation } = useTranslation();
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-start">
       <div className="mt-[2rem] flex h-full w-11/12 flex-col items-center justify-start gap-[5rem]">

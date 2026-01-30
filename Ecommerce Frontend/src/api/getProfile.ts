@@ -1,19 +1,40 @@
-"use server";
-import { createClient } from "@/lib/supabase";
-import { Tables } from "@/types/database.types";
+"use client";
 
-export default async function getProfile(): Promise<{ data: Tables<"profiles"> | null; error: unknown }> {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getUser();
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  if (!data.user) {
-    return { data: null, error: null };
+export default async function getProfile() {
+  try {
+    // Get token from localStorage (client-side only)
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    
+    if (!token) {
+      return { data: null, error: null };
+    }
+
+    const response = await fetch(`${API_URL}/me/`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      // If token is invalid, clear it
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+      }
+      return { data: null, error: "Unauthorized" };
+    }
+
+    const result = await response.json();
+    return { data: result.data, error: null };
+  } catch (err) {
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : "Network error",
+    };
   }
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select()
-    .match({ user_id: data.user.id })
-    .single();
-
-  return { data: profile as Tables<"profiles"> | null, error };
 }

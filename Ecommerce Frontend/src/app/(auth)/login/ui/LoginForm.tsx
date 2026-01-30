@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import SecondaryButton from "../../../../components/SecondaryButton";
 import LoginWithPassword from "./LoginWithPassword";
-import LoginWithGoogle from "./LoginWithGoogle";
+// import LoginWithGoogle from "./LoginWithGoogle"; // Commented out - OAuth provider not configured yet
 import useTranslation from "@/translation/useTranslation";
 
 export default function LoginForm() {
@@ -27,6 +27,7 @@ export default function LoginForm() {
       <div className="flex flex-col gap-10 lg:flex-row">
         <div className="flex-1">
           <LoginWithPassword />
+          {/* Commented out - OAuth provider not configured yet
           <div className="mt-6 flex w-full flex-col items-center justify-center gap-6">
             <div className="mx-auto flex w-full items-center justify-center space-x-3">
               <hr className="w-36 border-gray-300 max-sm:flex-1" />
@@ -37,6 +38,7 @@ export default function LoginForm() {
             </div>
             <LoginWithGoogle />
           </div>
+          */}
         </div>
         <div className="hidden lg:block lg:w-px lg:bg-gray-200" />
         <div className="flex-1 space-y-4 text-center lg:w-1/2 lg:text-left">

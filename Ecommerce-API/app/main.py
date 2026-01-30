@@ -6,7 +6,7 @@ from app.routers import (
     auth,
     accounts,
     events,
-    recommendations,
+    # recommendations,  # Temporarily disabled due to fastembed import error
 )
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -81,7 +81,7 @@ app.include_router(users.router)
 app.include_router(accounts.router)
 app.include_router(auth.router)
 app.include_router(events.router)
-app.include_router(recommendations.router)
+# app.include_router(recommendations.router)  # Temporarily disabled due to fastembed import error
 
 
 @app.on_event("startup")

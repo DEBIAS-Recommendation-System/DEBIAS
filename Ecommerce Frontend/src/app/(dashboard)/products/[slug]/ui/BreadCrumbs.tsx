@@ -24,7 +24,7 @@ export default function BreadCrumbs() {
           href={"/products"}
           className="cursor-pointer leading-6 transition-all ease-linear hover:font-medium hover:text-slate-500 hover:underline"
         >
-          {translation?.lang["toys"]}
+          {translation?.lang["Products"] || "Products"}
         </Link>
         {product?.title && (
           <>
