@@ -7,6 +7,8 @@ import { WishlistHart } from "./WishListHart";
 import { IProduct } from "@/types/database.tables.types";
 
 export default function Product(product: Partial<IProduct>) {
+  const productId = product.id || product.product_id;
+  
   return (
     <article className="group relative flex h-[420px] max-h-[420px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
       {/* Image Container */}
@@ -22,7 +24,10 @@ export default function Product(product: Partial<IProduct>) {
         )}
 
         {/* Product Image */}
-        <Link href={`/products/${product.id || product.product_id}`} className="relative block h-full w-full">
+        <Link 
+          href={`/products/${productId}`} 
+          className="relative block h-full w-full"
+        >
           <Image
             src={product.imgUrl || "/product/prod2.jpg"}
             alt={product.title || "Product image"}

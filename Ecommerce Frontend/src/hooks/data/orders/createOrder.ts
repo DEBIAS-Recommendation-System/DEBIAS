@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import useCart from "../cart/useCart";
 import { sendMail } from "@/api/sendEmail";
-import { sendBatchEvents } from "@/actions/events/sendEvent";
+import { trackBatchEvents } from "@/utils/eventTracking";
 import { getSessionId } from "@/utils/session";
 
 export default function useCreateOrder() {
@@ -277,7 +277,7 @@ export default function useCreateOrder() {
       // Get the first product ID for complementary recommendations
       const firstProductId = cart.data?.[0]?.id;
       
-      // Send purchase events to Neo4j for all cart items
+      // Send purchase events to Neo4j for all cart items (client-side tracking)
       const sessionId = getSessionId();
       if (cart?.data && Array.isArray(cart.data)) {
         const purchaseEvents = cart.data.map((item: any) => ({
@@ -286,11 +286,16 @@ export default function useCreateOrder() {
           user_session: sessionId,
         }));
         
+        console.log("💰 [PURCHASE EVENT] Sending purchase events for", purchaseEvents.length, "items:", {
+          products: purchaseEvents.map(e => e.product_id),
+          session_id: sessionId,
+        });
+        
         try {
-          await sendBatchEvents(purchaseEvents);
-          console.log("✅ Purchase events sent for", purchaseEvents.length, "items");
+          await trackBatchEvents(purchaseEvents);
+          console.log("✅ [PURCHASE EVENT] Purchase events sent successfully for", purchaseEvents.length, "items");
         } catch (error) {
-          console.error("Failed to send purchase events:", error);
+          console.error("❌ [PURCHASE EVENT] Failed to send purchase events:", error);
           // Don't fail the order if event tracking fails
         }
       }

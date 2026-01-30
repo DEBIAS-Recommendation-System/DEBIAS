@@ -76,6 +76,54 @@ class OrchestratorService:
                 self._qdrant_service.initialize_multimodal_models()
         return self._qdrant_service
     
+    def enrich_recommendations_with_payload(
+        self,
+        recommendations: List[Dict[str, Any]],
+        collection_name: str = "products"
+    ) -> List[Dict[str, Any]]:
+        """
+        Enrich recommendations with product payload data from Qdrant.
+        
+        Args:
+            recommendations: List of recommendations with product_id
+            collection_name: Qdrant collection name
+            
+        Returns:
+            Recommendations with payload data added
+        """
+        if not recommendations:
+            return recommendations
+            
+        try:
+            # Get all product IDs that need enrichment
+            product_ids = [r["product_id"] for r in recommendations if not r.get("payload")]
+            
+            if not product_ids:
+                return recommendations
+                
+            # Batch retrieve product data from Qdrant
+            points = self.qdrant.client.retrieve(
+                collection_name=collection_name,
+                ids=product_ids,
+                with_payload=True,
+                with_vectors=False
+            )
+            
+            # Create a lookup map
+            payload_map = {point.id: point.payload for point in points}
+            
+            # Enrich recommendations
+            for rec in recommendations:
+                if not rec.get("payload") and rec["product_id"] in payload_map:
+                    rec["payload"] = payload_map[rec["product_id"]]
+                    
+            logger.info(f"Enriched {len(payload_map)} recommendations with product data")
+            return recommendations
+            
+        except Exception as e:
+            logger.warning(f"Error enriching recommendations with payload: {e}")
+            return recommendations
+    
     def determine_user_mode(
         self,
         user_id: int,
@@ -435,6 +483,9 @@ class OrchestratorService:
         unique_recommendations.sort(key=lambda x: x["score"], reverse=True)
         final_recommendations = unique_recommendations[:total_limit]
         
+        # Enrich recommendations with product data from Qdrant
+        final_recommendations = self.enrich_recommendations_with_payload(final_recommendations)
+        
         # Clean up recommendations if reasons not needed
         if not include_reasons:
             for rec in final_recommendations:
@@ -502,6 +553,9 @@ class OrchestratorService:
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
         paged_recommendations = result["recommendations"][start_idx:end_idx]
+        
+        # Enrich recommendations with product data from Qdrant
+        paged_recommendations = self.enrich_recommendations_with_payload(paged_recommendations)
         
         has_more = len(result["recommendations"]) > end_idx
         
