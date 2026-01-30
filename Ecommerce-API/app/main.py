@@ -7,6 +7,7 @@ from app.routers import (
     accounts,
     events,
     recommendations,
+    behavioral_recommendations,
 )
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -82,6 +83,7 @@ app.include_router(accounts.router)
 app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(recommendations.router)
+app.include_router(behavioral_recommendations.router)
 
 
 @app.on_event("startup")
