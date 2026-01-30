@@ -292,11 +292,16 @@ class OrchestratorService:
             purchase_history = self.neo4j.get_user_purchase_history(user_id, limit=50)
             exclude_ids = {p["product_id"] for p in purchase_history}
             
+            logger.info(f"Looking for complementary products for product {purchased_product_id}")
+            logger.info(f"User {user_id} has {len(exclude_ids)} previous purchases to exclude")
+            
             # Get complementary products
             results = self.neo4j.get_complementary_products(
                 product_id=purchased_product_id,
                 limit=limit + len(exclude_ids)  # Get extra to account for exclusions
             )
+            
+            logger.info(f"Neo4j returned {len(results)} complementary products before filtering")
             
             recommendations = []
             for r in results:
@@ -310,6 +315,7 @@ class OrchestratorService:
                     if len(recommendations) >= limit:
                         break
             
+            logger.info(f"Returning {len(recommendations)} complementary products after filtering")
             return recommendations
             
         except Exception as e:
@@ -376,14 +382,18 @@ class OrchestratorService:
             # After purchase: Get complementary products from Neo4j
             purchased_product_id = context.get("last_purchased_product_id")
             if purchased_product_id:
+                logger.info(f"Fetching complementary products for product {purchased_product_id}")
                 complementary_recs = self.get_complementary_products(
                     purchased_product_id=purchased_product_id,
                     user_id=user_id,
                     limit=activity_limit
                 )
+                logger.info(f"Found {len(complementary_recs)} complementary products")
                 if complementary_recs:
                     recommendations.extend(complementary_recs)
                     sources_used.append(RecommendationSource.COMPLEMENTARY)
+                else:
+                    logger.warning(f"No complementary products found for product {purchased_product_id}")
                     
         elif mode == RecommendationMode.BROWSING:
             # While browsing: Use semantic search with high diversity

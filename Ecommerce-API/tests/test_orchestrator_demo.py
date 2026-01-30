@@ -7,11 +7,20 @@ import time
 import asyncio
 from datetime import datetime
 from typing import Optional
+import sys
+from pathlib import Path
+
+# Ensure project root is on sys.path when running this file directly
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.services.orchestrator_service import get_orchestrator_service, RecommendationMode
 from app.services.neo4j_service import get_neo4j_service
+from app.services.events import EventService
 from app.db.database import SessionLocal
-from app.models.models import User, Product, Event
+from app.models.models import User, Product
+from app.schemas.events import EventCreate
 from sqlalchemy import select
 
 
@@ -22,7 +31,19 @@ def print_separator(title: str):
     print("="*80 + "\n")
 
 
-def print_recommendations(recs: list, phase: str, show_details: bool = True):
+def get_product_name(product_id: int, db) -> str:
+    """Get product name from database"""
+    try:
+        result = db.execute(select(Product).where(Product.product_id == product_id))
+        product = result.scalar_one_or_none()
+        if product:
+            return product.title[:60] + ("..." if len(product.title) > 60 else "")
+        return f"Product #{product_id}"
+    except Exception:
+        return f"Product #{product_id}"
+
+
+def print_recommendations(recs: list, phase: str, show_details: bool = True, db=None):
     """Pretty print recommendations"""
     print(f"\n📦 {phase} - Found {len(recs)} recommendations:\n")
     
@@ -32,15 +53,27 @@ def print_recommendations(recs: list, phase: str, show_details: bool = True):
         source = rec.get('source', 'unknown')
         reason = rec.get('reason', 'No reason provided')
         
-        print(f"{i}. Product #{product_id}")
-        print(f"   Score: {score:.4f} | Source: {source}")
-        if show_details and 'payload' in rec:
+        # Get product name from payload or database
+        product_name = None
+        if 'payload' in rec and rec['payload']:
+            product_name = rec['payload'].get('title', '')
+        elif db:
+            product_name = get_product_name(product_id, db)
+        
+        if product_name:
+            title_short = product_name[:60] + ("..." if len(product_name) > 60 else "")
+            print(f"{i}. {title_short}")
+            print(f"   Product ID: {product_id} | Score: {score:.4f}")
+        else:
+            print(f"{i}. Product #{product_id}")
+            print(f"   Score: {score:.4f}")
+        
+        print(f"   Source: {source} | {reason}")
+        
+        if show_details and 'payload' in rec and rec['payload']:
             payload = rec['payload']
-            title = payload.get('title', 'N/A')[:50]
             price = payload.get('price', 'N/A')
-            print(f"   Title: {title}...")
             print(f"   Price: ${price}")
-        print(f"   Reason: {reason}")
         print()
 
 
@@ -66,40 +99,44 @@ def get_sample_products(db, limit: int = 20) -> list[Product]:
     return list(products)
 
 
-def simulate_product_view(user_id: int, product_id: int, db):
+def simulate_product_view(user_id: int, product_id: int):
     """Simulate a user viewing a product"""
     try:
-        event = Event(
+        session_id = f"session_{user_id}_{int(time.time())}"
+        
+        # Use EventService just like the router does
+        event = EventCreate(
             user_id=user_id,
             product_id=product_id,
             event_type="view",
             event_time=datetime.utcnow(),
-            user_session=f"session_{user_id}_{int(time.time())}"
+            user_session=session_id
         )
-        db.add(event)
-        db.commit()
+        EventService.create_event(event, token=None)
+        
         print(f"  ✓ Logged view event: User {user_id} viewed Product {product_id}")
     except Exception as e:
         print(f"  ✗ Error logging view: {e}")
-        db.rollback()
 
 
-def simulate_product_purchase(user_id: int, product_id: int, db):
+def simulate_product_purchase(user_id: int, product_id: int):
     """Simulate a user purchasing a product"""
     try:
-        event = Event(
+        session_id = f"session_{user_id}_{int(time.time())}"
+        
+        # Use EventService just like the router does
+        event = EventCreate(
             user_id=user_id,
             product_id=product_id,
             event_type="purchase",
             event_time=datetime.utcnow(),
-            user_session=f"session_{user_id}_{int(time.time())}"
+            user_session=session_id
         )
-        db.add(event)
-        db.commit()
+        EventService.create_event(event, token=None)
+        
         print(f"  ✓ Logged purchase event: User {user_id} purchased Product {product_id}")
     except Exception as e:
         print(f"  ✗ Error logging purchase: {e}")
-        db.rollback()
 
 
 def test_orchestrator_user_journey_demo():
@@ -132,6 +169,21 @@ def test_orchestrator_user_journey_demo():
             return
         
         user_id = user.id
+        
+        # Clean up any previous test data for this user (for fresh demo)
+        print(f"🧹 Cleaning up previous test data for user {user_id}...")
+        try:
+            with neo4j.driver.session() as session:
+                result = session.run("""
+                    MATCH (u:User {user_id: $user_id})-[r:INTERACTED]->()
+                    DELETE r
+                    RETURN count(r) as deleted
+                """, user_id=user_id)
+                deleted = result.single()["deleted"]
+                print(f"   Deleted {deleted} previous interactions from Neo4j")
+        except Exception as e:
+            print(f"   Warning: Could not clean Neo4j data: {e}")
+        
         products = get_sample_products(db, limit=20)
         
         if len(products) < 5:
@@ -162,7 +214,7 @@ def test_orchestrator_user_journey_demo():
         
         print(f"Strategy: {result['strategy']}")
         print(f"Sources Used: {', '.join(result['sources_used'])}")
-        print_recommendations(result['recommendations'], "COLD START RECOMMENDATIONS")
+        print_recommendations(result['recommendations'], "COLD START RECOMMENDATIONS", db=db)
         
         time.sleep(2)
         
@@ -180,11 +232,11 @@ def test_orchestrator_user_journey_demo():
         for i, product in enumerate(viewed_products, 1):
             print(f"{i}. Product #{product.product_id}: {product.title[:60]}...")
             print(f"   Category: {product.category}, Price: ${product.price}")
-            simulate_product_view(user_id, product.product_id, db)
+            simulate_product_view(user_id, product.product_id)
             time.sleep(0.5)  # Simulate time between views
         
-        print("\n⏳ Waiting for events to propagate to Neo4j...")
-        time.sleep(3)
+        print("\n⏳ Processing events...")
+        time.sleep(1)
         
         # Get recommendations after browsing
         print("\n📊 Getting recommendations after browsing activity...\n")
@@ -202,7 +254,7 @@ def test_orchestrator_user_journey_demo():
         
         print(f"Strategy: {result['strategy']}")
         print(f"Sources Used: {', '.join(result['sources_used'])}")
-        print_recommendations(result['recommendations'], "BROWSING MODE RECOMMENDATIONS")
+        print_recommendations(result['recommendations'], "BROWSING MODE RECOMMENDATIONS", db=db)
         
         # Show user history
         print("\n📜 User's recent history:")
@@ -225,11 +277,11 @@ def test_orchestrator_user_journey_demo():
         
         for i, product in enumerate(additional_products, 1):
             print(f"{i}. Product #{product.product_id}: {product.title[:60]}...")
-            simulate_product_view(user_id, product.product_id, db)
+            simulate_product_view(user_id, product.product_id)
             time.sleep(0.5)
         
-        print("\n⏳ Waiting for events to propagate...")
-        time.sleep(3)
+        print("\n⏳ Processing events...")
+        time.sleep(1)
         
         result = orchestrator.get_orchestrated_recommendations(
             user_id=user_id,
@@ -240,7 +292,7 @@ def test_orchestrator_user_journey_demo():
         
         print(f"Strategy: {result['strategy']}")
         print(f"Sources Used: {', '.join(result['sources_used'])}")
-        print_recommendations(result['recommendations'], "UPDATED BROWSING RECOMMENDATIONS")
+        print_recommendations(result['recommendations'], "UPDATED BROWSING RECOMMENDATIONS", db=db)
         
         time.sleep(2)
         
@@ -251,16 +303,41 @@ def test_orchestrator_user_journey_demo():
         print("Scenario: User decides to purchase a product")
         print("Expected: Complementary products that pair well with purchase\n")
         
-        # Purchase the first product user viewed
-        purchased_product = viewed_products[0]
-        print(f"🎉 User is purchasing Product #{purchased_product.product_id}")
+        # Purchase a product that's likely to have co-purchase data
+        # Use a trending product from the bulk dataset instead of the viewed jeans
+        print("🔍 Finding a product with rich purchase history...")
+        trending_products = neo4j.get_trending_products(limit=20, event_types=["purchase"])
+        
+        # Try to find one with good co-purchase data
+        purchased_product = None
+        for trend in trending_products:
+            test_complementary = neo4j.get_complementary_products(
+                product_id=trend["product_id"],
+                limit=1
+            )
+            if test_complementary:
+                # Found one with co-purchase data!
+                # Get the product from our DB
+                result = db.execute(select(Product).where(Product.product_id == trend["product_id"]))
+                db_product = result.scalar_one_or_none()
+                if db_product:
+                    purchased_product = db_product
+                    print(f"✓ Found product with co-purchase patterns: {purchased_product.title[:70]}")
+                    break
+        
+        # Fallback to the first viewed product if we couldn't find one
+        if not purchased_product:
+            print("⚠ No products with co-purchase data found, using viewed product")
+            purchased_product = viewed_products[0]
+        
+        print(f"\n🎉 User is purchasing Product #{purchased_product.product_id}")
         print(f"   {purchased_product.title[:70]}...")
         print(f"   Price: ${purchased_product.price}\n")
         
-        simulate_product_purchase(user_id, purchased_product.product_id, db)
+        simulate_product_purchase(user_id, purchased_product.product_id)
         
-        print("⏳ Waiting for purchase event to propagate...")
-        time.sleep(3)
+        print("⏳ Processing purchase event...")
+        time.sleep(1)
         
         # Get recommendations after purchase
         print("\n📊 Getting recommendations after purchase...\n")
@@ -277,7 +354,27 @@ def test_orchestrator_user_journey_demo():
         
         print(f"Strategy: {result['strategy']}")
         print(f"Sources Used: {', '.join(result['sources_used'])}")
-        print_recommendations(result['recommendations'], "POST-PURCHASE RECOMMENDATIONS")
+        print_recommendations(result['recommendations'], "POST-PURCHASE RECOMMENDATIONS", db=db)
+        
+        # Debug: Check what Neo4j has for this product
+        print("\n🔍 Debugging complementary products:")
+        print(f"   Checking Neo4j for purchase patterns of product {purchased_product.product_id}")
+        
+        # Check if anyone in Neo4j bought this product
+        neo4j_results = neo4j.get_complementary_products(
+            product_id=purchased_product.product_id,
+            limit=20
+        )
+        print(f"   Neo4j found {len(neo4j_results)} co-purchase patterns")
+        if neo4j_results:
+            print(f"   Sample: {neo4j_results[:3]}")
+        
+        # Check total purchases in Neo4j
+        stats = neo4j.get_product_stats(purchased_product.product_id)
+        if stats:
+            print(f"   Product stats in Neo4j: {stats}")
+        else:
+            print(f"   ⚠ Product {purchased_product.product_id} not found in Neo4j!")
         
         # Show complementary products specifically
         print("\n🔗 Specific complementary products for purchased item:")
@@ -314,7 +411,7 @@ def test_orchestrator_user_journey_demo():
         print(f"Mode: {for_you['mode']}")
         print(f"Strategy: {for_you['strategy']}")
         print(f"Has More: {for_you['has_more']}")
-        print_recommendations(for_you['recommendations'], "FOR YOU PAGE (Page 1)")
+        print_recommendations(for_you['recommendations'], "FOR YOU PAGE (Page 1)", db=db)
         
         if for_you['has_more']:
             print("\n📄 Fetching page 2...\n")
@@ -325,7 +422,7 @@ def test_orchestrator_user_journey_demo():
                 page=2,
                 page_size=10
             )
-            print_recommendations(for_you_page2['recommendations'], "FOR YOU PAGE (Page 2)", show_details=False)
+            print_recommendations(for_you_page2['recommendations'], "FOR YOU PAGE (Page 2)", show_details=False, db=db)
         
         # ===================================================================
         # SUMMARY
