@@ -47,7 +47,7 @@ export default function Footer() {
           </div>
           <div className="max-[470px]:gap- flex flex-col items-center gap-2">
             <div className="mb-2 text-xl font-bold max-[470px]:text-[1rem]">
-              Sfari
+              Debias
             </div>
             {SfariLinks.map((link, i) => (
               <div

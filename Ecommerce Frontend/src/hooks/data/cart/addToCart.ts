@@ -2,7 +2,7 @@
 import { useToast } from "@/hooks/useToast";
 import useTranslation from "@/translation/useTranslation";
 import { useQueryClient } from "@tanstack/react-query";
-import { sendEvent } from "@/actions/events/sendEvent";
+import { trackEvent } from "@/utils/eventTracking";
 import { getSessionId } from "@/utils/session";
 
 export function useAddToCart() {
@@ -26,16 +26,21 @@ export function useAddToCart() {
     queryClient.invalidateQueries({ queryKey: ["cart"] }); 
     queryClient.invalidateQueries({ queryKey: ["products"] }); 
 
-    // Send cart event to Neo4j
+    // Send cart event to Neo4j (client-side tracking)
     const sessionId = getSessionId();
     const productIdNum = parseInt(product_id);
     
     if (!isNaN(productIdNum)) {
-      sendEvent({
+      console.log("🛒 [CART EVENT] Adding product to cart:", {
+        product_id: productIdNum,
+        session_id: sessionId,
+      });
+      
+      trackEvent({
         event_type: "cart",
         product_id: productIdNum,
         user_session: sessionId,
-      }).catch(err => console.error("Failed to send cart event:", err));
+      });
     }
   };
 
