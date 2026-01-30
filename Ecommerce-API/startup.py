@@ -21,24 +21,7 @@ def wait_for_services():
     retry_interval = 2
     
     # Wait for PostgreSQL
-    print("⏳ Waiting for PostgreSQL...")
-    for i in range(max_retries):
-        try:
-            conn = psycopg2.connect(
-                host=settings.db_hostname,
-                port=settings.db_port,
-                user=settings.db_username,
-                password=settings.db_password,
-                database=settings.db_name
-            )
-            conn.close()
-            print("✓ PostgreSQL is ready")
-            break
-        except Exception as e:
-            if i == max_retries - 1:
-                print(f"✗ PostgreSQL not ready after {max_retries * retry_interval}s: {e}")
-                return False
-            time.sleep(retry_interval)
+  
     
     # Wait for Qdrant
     print("⏳ Waiting for Qdrant...")
@@ -99,7 +82,7 @@ def embed_products_to_qdrant():
         success, failed = embed_products(
             csv_path=str(csv_path),
             collection_name="products",
-            limit=None,  # Embed all products
+            limit=400,  
             batch_size=50
         )
         
@@ -160,15 +143,7 @@ def main():
         return
     
     # Run migrations
-    if not run_migrations():
-        print("\n✗ Initialization failed at migrations stage")
-        sys.exit(1)
-    
-    # Populate database
-    if not populate_database():
-        print("\n✗ Initialization failed at database population stage")
-        sys.exit(1)
-    
+   
     # Embed products
     if not embed_products_to_qdrant():
         print("\n⚠️  Product embedding failed, but database is populated")

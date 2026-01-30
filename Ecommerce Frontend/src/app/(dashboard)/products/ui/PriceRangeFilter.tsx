@@ -56,10 +56,11 @@ export default function PriceRangeFilter() {
     };
     
     fetchPriceRange();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - only run once on mount
 
   const debouncedOnChange = useCallback(
-    debounce((newValue: number[]) => {
+    (newValue: number[]) => {
       router.push(
         createNewPathname({
           currentPathname: pathname,
@@ -73,16 +74,22 @@ export default function PriceRangeFilter() {
           scroll: false,
         },
       );
-    }, 1500),
+    },
     [pathname, searchParams, router],
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedOnChangeWithDelay = useCallback(
+    debounce(debouncedOnChange, 1500),
+    [debouncedOnChange],
+  );
+
   useEffect(() => {
-    debouncedOnChange(value);
+    debouncedOnChangeWithDelay(value);
     return () => {
-      debouncedOnChange.cancel();
+      debouncedOnChangeWithDelay.cancel();
     };
-  }, [value, debouncedOnChange]);
+  }, [value, debouncedOnChangeWithDelay]);
 
   useEffect(() => {
     // Don't update if still loading
@@ -95,6 +102,7 @@ export default function PriceRangeFilter() {
     if (maxPriceSearchParams && Number(maxPriceSearchParams) !== value[1]) {
       setValue((prev) => [prev[0], Number(maxPriceSearchParams)]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minPriceSearchParams, maxPriceSearchParams, isLoading]);
 
   const validateAndSetValue = (newValue: number[]) => {

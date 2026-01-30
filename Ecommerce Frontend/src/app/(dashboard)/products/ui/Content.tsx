@@ -109,6 +109,7 @@ export default function Content() {
       }, 1000);
       return () => clearTimeout(timer);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, isLastPage, products?.meta?.has_next_page, queryClient]);
   return (
     <div dir={translation?.default_language ==="ar" ? "rtl" : "ltr"}  className="mx-auto flex flex-row gap-12 max-[830px]:gap-0">

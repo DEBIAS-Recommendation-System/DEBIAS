@@ -7,8 +7,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import useCart from "../cart/useCart";
 import { sendMail } from "@/api/sendEmail";
-import { trackBatchEvents } from "@/utils/eventTracking";
+import { trackBatchEvents, getUserId } from "@/utils/eventTracking";
 import { getSessionId } from "@/utils/session";
+import { cartsApi } from "@/api/fastapi";
+import { TokenManager } from "@/api/fastapi/apiClient";
 
 export default function useCreateOrder() {
   const queryClient = useQueryClient();
@@ -279,16 +281,20 @@ export default function useCreateOrder() {
       
       // Send purchase events to Neo4j for all cart items (client-side tracking)
       const sessionId = getSessionId();
+      const userId = getUserId();
+      
       if (cart?.data && Array.isArray(cart.data)) {
         const purchaseEvents = cart.data.map((item: any) => ({
           event_type: "purchase" as const,
           product_id: parseInt(item.id),
           user_session: sessionId,
+          user_id: userId ?? undefined,
         }));
         
         console.log("💰 [PURCHASE EVENT] Sending purchase events for", purchaseEvents.length, "items:", {
           products: purchaseEvents.map(e => e.product_id),
           session_id: sessionId,
+          user_id: userId,
         });
         
         try {
@@ -297,6 +303,23 @@ export default function useCreateOrder() {
         } catch (error) {
           console.error("❌ [PURCHASE EVENT] Failed to send purchase events:", error);
           // Don't fail the order if event tracking fails
+        }
+      }
+      
+      // Clear FastAPI cart if user is authenticated
+      const accessToken = TokenManager.getAccessToken();
+      if (accessToken) {
+        try {
+          const cartsResponse = await cartsApi.getAll({ limit: 1 });
+          if (cartsResponse.data && cartsResponse.data.length > 0) {
+            const activeCart = cartsResponse.data[0];
+            // Clear the cart by updating it with empty items
+            await cartsApi.update(activeCart.id, { cart_items: [] });
+            console.log("✅ [PURCHASE] Cleared FastAPI cart after purchase");
+          }
+        } catch (error) {
+          console.error("⚠️ [PURCHASE] Failed to clear FastAPI cart:", error);
+          // Continue anyway - order was successful
         }
       }
       
@@ -321,15 +344,16 @@ export default function useCreateOrder() {
 
       const { error } = await clearCart(user_id);
       if (error) throw new Error(error);
-      localStorage.clear();
+      
+      // Clear cart from localStorage but preserve important data like user_id and access_token
+      localStorage.removeItem("cart");
 
       // Return the first product ID for redirecting to complementary products page
       return { firstProductId };
     },
     onSuccess: async (result) => {
       toast.success(
-        translation?.lang["Order created successfully"] ??
-          "Order created successfully",
+        "🎉 Purchase completed successfully! Thank you for your order.",
       );
       await queryClient.invalidateQueries({
         queryKey: ["cart"],

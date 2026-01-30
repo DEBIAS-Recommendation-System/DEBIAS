@@ -60,6 +60,7 @@ export default function Orders({ searchQuery }: { searchQuery: string }) {
         }),
       );
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, orders?.meta?.has_next_page, queryClient]);
 
   return (

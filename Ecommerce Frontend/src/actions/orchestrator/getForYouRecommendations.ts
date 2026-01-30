@@ -41,7 +41,7 @@ export async function getForYouRecommendations(
     const params = new URLSearchParams({
       page: String(page),
       page_size: String(pageSize),
-    });
+    }); 
 
     const response = await fetch(
       `${API_URL}/orchestrator/for-you/${userId}?${params.toString()}`,

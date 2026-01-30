@@ -48,6 +48,7 @@ export default function Page() {
     }
     setStartDate(new Date(selectedYearNumber, selectedMonthNumber, 2));
     setEndDate(new Date(selectedYearNumber, selectedMonthNumber, lastDayOfMonth+1));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth]);
   const generateMonthOptions = (): { label: string; value: string }[] => {
     if (!oldestOrderDate) return [];

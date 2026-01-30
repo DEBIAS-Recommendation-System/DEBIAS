@@ -53,18 +53,19 @@ export default function SearchBar() {
         }
       : undefined,
   });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedOnChange = useCallback(
     debounce((newValue: string | null) => {
       setDebouncedValue(newValue);
     }, 500),
-    [value],
+    [],
   );
   useEffect(() => {
     debouncedOnChange(value);
     return () => {
       debouncedOnChange.cancel();
     };
-  }, [value]);
+  }, [value, debouncedOnChange]);
   const StyledInputBase = styled(InputBase)(({ theme }) => ({
     color: "inherit",
     width: "100%",

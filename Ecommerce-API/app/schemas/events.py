@@ -22,8 +22,21 @@ class EventBase(BaseModel):
         if value is None:
             return value
         if isinstance(value, str):
-            parsed = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-            return parsed.replace(tzinfo=timezone.utc)
+            # Try multiple formats - ISO format first (most common from JS), then simple format
+            for fmt in [
+                "%Y-%m-%dT%H:%M:%S.%fZ",  # ISO format with milliseconds: 2026-01-30T22:25:25.158Z
+                "%Y-%m-%dT%H:%M:%SZ",      # ISO format without milliseconds: 2026-01-30T22:25:25Z
+                "%Y-%m-%dT%H:%M:%S.%f",    # ISO format with milliseconds, no Z
+                "%Y-%m-%dT%H:%M:%S",       # ISO format without Z
+                "%Y-%m-%d %H:%M:%S",       # Simple format: 2026-01-30 22:25:25
+            ]:
+                try:
+                    parsed = datetime.strptime(value, fmt)
+                    return parsed.replace(tzinfo=timezone.utc)
+                except ValueError:
+                    continue
+            # If none of the formats match, raise an error with helpful message
+            raise ValueError(f"Invalid datetime format: '{value}'. Expected ISO format (e.g., '2026-01-30T22:25:25Z') or '%Y-%m-%d %H:%M:%S'")
         if isinstance(value, datetime):
             if value.tzinfo is None:
                 value = value.replace(tzinfo=timezone.utc)
@@ -51,8 +64,21 @@ class EventCreate(BaseModel):
         if value is None:
             return value
         if isinstance(value, str):
-            parsed = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-            return parsed.replace(tzinfo=timezone.utc)
+            # Try multiple formats - ISO format first (most common from JS), then simple format
+            for fmt in [
+                "%Y-%m-%dT%H:%M:%S.%fZ",  # ISO format with milliseconds: 2026-01-30T22:25:25.158Z
+                "%Y-%m-%dT%H:%M:%SZ",      # ISO format without milliseconds: 2026-01-30T22:25:25Z
+                "%Y-%m-%dT%H:%M:%S.%f",    # ISO format with milliseconds, no Z
+                "%Y-%m-%dT%H:%M:%S",       # ISO format without Z
+                "%Y-%m-%d %H:%M:%S",       # Simple format: 2026-01-30 22:25:25
+            ]:
+                try:
+                    parsed = datetime.strptime(value, fmt)
+                    return parsed.replace(tzinfo=timezone.utc)
+                except ValueError:
+                    continue
+            # If none of the formats match, raise an error with helpful message
+            raise ValueError(f"Invalid datetime format: '{value}'. Expected ISO format (e.g., '2026-01-30T22:25:25Z') or '%Y-%m-%d %H:%M:%S'")
         if isinstance(value, datetime):
             if value.tzinfo is None:
                 value = value.replace(tzinfo=timezone.utc)

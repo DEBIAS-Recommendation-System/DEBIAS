@@ -9,12 +9,13 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./
+COPY ./Ecommerce-API/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-COPY . ./
+COPY ./Ecommerce-API ./
+COPY ./data /data
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && python populateDB.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
