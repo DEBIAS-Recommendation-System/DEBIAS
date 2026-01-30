@@ -58,7 +58,7 @@ const removeItem = () => {
     <div className="w-[95%] border-2 border-solid transition-all duration-200 hover:w-[97%] hover:shadow-md max-[480px]:w-full">
       <Link
         className="flex cursor-pointer items-center justify-between"
-        href={`/products/${product?.id || product?.product_id}`}
+        href={`/products/${product?.id}`}
       >
         <div className="flex w-full gap-2 max-[390px]:gap-1 sm:flex-row md:flex-col md:items-center lg:flex-row">
           <Image
