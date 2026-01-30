@@ -117,3 +117,98 @@ class RecommendationResponse(BaseModel):
                 "filters_applied": {"category": "Sports & Outdoors"},
             }
         }
+
+
+class ProductOrbitPoint(BaseModel):
+    """Product with 3D coordinates in semantic space"""
+
+    product_id: int = Field(..., description="Product ID")
+    title: str = Field(..., description="Product title")
+    brand: Optional[str] = Field(None, description="Product brand")
+    category: Optional[str] = Field(None, description="Product category")
+    price: Optional[float] = Field(None, description="Product price")
+    imgUrl: Optional[str] = Field(None, description="Product image URL")
+    position: Dict[str, float] = Field(
+        ..., description="3D coordinates {x, y, z} in semantic space"
+    )
+    similarity_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Similarity score to query (0-1)"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "product_id": 12345,
+                "title": "Nike Air Zoom Pegasus 38",
+                "brand": "Nike",
+                "category": "Sports & Outdoors",
+                "price": 119.99,
+                "imgUrl": "https://example.com/image.jpg",
+                "position": {"x": 2.45, "y": -1.32, "z": 3.87},
+                "similarity_score": 0.89,
+            }
+        }
+
+
+class OrbitViewRequest(BaseModel):
+    """Request schema for orbit view 3D visualization"""
+
+    query_text: str = Field(..., description="Search query to visualize in 3D space")
+    limit: int = Field(
+        100, ge=10, le=500, description="Number of products to visualize (10-500)"
+    )
+    filters: Optional[Dict[str, Any]] = Field(
+        None, description="Optional filters (category, brand, price range)"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query_text": "comfortable running shoes",
+                "limit": 150,
+                "filters": {"category": "Sports & Outdoors"},
+            }
+        }
+
+
+class OrbitViewResponse(BaseModel):
+    """Response schema for orbit view 3D visualization"""
+
+    query_text: str = Field(..., description="Original search query")
+    query_position: Dict[str, float] = Field(
+        ..., description="3D position of query vector at origin {x: 0, y: 0, z: 0}"
+    )
+    total_products: int = Field(..., description="Number of products in visualization")
+    products: List[ProductOrbitPoint] = Field(
+        ..., description="Products with 3D coordinates"
+    )
+    dimension_info: Dict[str, Any] = Field(
+        ..., description="Information about dimensionality reduction"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query_text": "comfortable running shoes",
+                "query_position": {"x": 0.0, "y": 0.0, "z": 0.0},
+                "total_products": 150,
+                "products": [
+                    {
+                        "product_id": 12345,
+                        "title": "Nike Air Zoom Pegasus 38",
+                        "brand": "Nike",
+                        "category": "Sports & Outdoors",
+                        "price": 119.99,
+                        "imgUrl": "https://example.com/image.jpg",
+                        "position": {"x": 2.45, "y": -1.32, "z": 3.87},
+                        "similarity_score": 0.89,
+                    }
+                ],
+                "dimension_info": {
+                    "original_dimensions": 512,
+                    "reduced_dimensions": 3,
+                    "method": "UMAP",
+                    "centered_at_origin": True,
+                },
+            }
+        }

@@ -185,8 +185,8 @@ class Neo4jService:
         WITH rec.product_id AS product_id,
              count(DISTINCT similar) AS recommender_count,
              sum(CASE 
-                 WHEN r.event_type = 'purchase' THEN 5
-                 WHEN r.event_type = 'cart' THEN 3
+                 WHEN r.event_type = 'purchase' THEN 80
+                 WHEN r.event_type = 'cart' THEN 30
                  WHEN r.event_type = 'view' THEN 1
                  ELSE 0 
              END) AS interaction_score
@@ -279,8 +279,8 @@ class Neo4jService:
         WITH other.product_id AS product_id,
              count(DISTINCT u) AS shared_users,
              sum(CASE 
-                 WHEN r.event_type = 'purchase' THEN 5
-                 WHEN r.event_type = 'cart' THEN 3
+                 WHEN r.event_type = 'purchase' THEN 80
+                 WHEN r.event_type = 'cart' THEN 30
                  WHEN r.event_type = 'view' THEN 1
                  ELSE 1 
              END) AS interaction_score
@@ -535,8 +535,8 @@ class Neo4jService:
         WITH pid,
              count(r) AS total_interactions,
              sum(CASE 
-                 WHEN r.event_type = 'purchase' THEN 5
-                 WHEN r.event_type = 'cart' THEN 3
+                 WHEN r.event_type = 'purchase' THEN 80
+                 WHEN r.event_type = 'cart' THEN 30
                  WHEN r.event_type = 'view' THEN 1
                  ELSE 0 
              END) AS weighted_score
@@ -591,8 +591,8 @@ class Neo4jService:
         WITH pid,
              count(DISTINCT su) AS similar_user_count,
              sum(CASE 
-                 WHEN r.event_type = 'purchase' THEN 5
-                 WHEN r.event_type = 'cart' THEN 3
+                 WHEN r.event_type = 'purchase' THEN 80
+                 WHEN r.event_type = 'cart' THEN 30
                  WHEN r.event_type = 'view' THEN 1
                  ELSE 0 
              END) AS affinity_score

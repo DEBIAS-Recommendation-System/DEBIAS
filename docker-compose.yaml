@@ -51,8 +51,8 @@ services:
 
   app:
     build:
-      context: ./Ecommerce-API
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./Ecommerce-API/Dockerfile
     container_name: fastapi-app
     env_file:
       - Ecommerce-API/.env

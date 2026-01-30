@@ -14,6 +14,9 @@ from app.schemas.recommendations import (
     RecommendationRequest,
     RecommendationResponse,
     ProductRecommendation,
+    OrbitViewRequest,
+    OrbitViewResponse,
+    ProductOrbitPoint,
 )
 from app.services.qdrant_service import QdrantService
 
@@ -235,3 +238,148 @@ async def health_check():
             "message": f"Health check failed: {str(e)}",
             "models_initialized": False,
         }
+
+
+@router.post("/orbit-view", status_code=status.HTTP_200_OK, response_model=OrbitViewResponse)
+async def get_orbit_view(request: OrbitViewRequest):
+    """
+    Get products in 3D semantic space for orbit visualization
+    
+    Transforms the 512-dimensional CLIP embedding space into an interactive 3D
+    visualization where products are positioned by semantic similarity.
+    
+    **Process:**
+    1. Performs vector search using the query text
+    2. Retrieves 512-dimensional embeddings for top N products
+    3. Applies UMAP dimensionality reduction (512d → 3d)
+    4. Normalizes coordinates so center of mass is at origin (0,0,0)
+    5. Returns products with 3D positions for visualization
+    
+    **Use Case:**
+    Powers the "Launch Into Orbit" 3D visualization feature that reveals
+    the semantic space underlying product search.
+    
+    **Example:**
+    ```json
+    {
+        "query_text": "comfortable running shoes",
+        "limit": 150,
+        "filters": {"category": "Sports & Outdoors"}
+    }
+    ```
+    """
+    try:
+        logger.info(f"Processing orbit view request: query='{request.query_text}', limit={request.limit}")
+        
+        # Step 1: Perform vector search to get relevant products
+        search_results = qdrant_service.search(
+            query_text=request.query_text,
+            limit=request.limit,
+            score_threshold=0.3,  # Lower threshold to get more products for visualization
+            collection_name="products",
+            filter_conditions=request.filters,
+            use_mmr=True,  # Use MMR for diverse product selection
+            mmr_diversity=0.7,  # High diversity for better 3D spread
+        )
+        
+        if not search_results:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No products found matching the query"
+            )
+        
+        # Step 2: Extract product IDs and build product metadata
+        product_ids = [result["id"] for result in search_results]
+        product_metadata = {}
+        for result in search_results:
+            payload = result.get("payload", {})
+            product_metadata[result["id"]] = {
+                "title": payload.get("title", "Unknown Product"),
+                "brand": payload.get("brand"),
+                "category": payload.get("category"),
+                "price": payload.get("price"),
+                "imgUrl": payload.get("image_url") or payload.get("imgUrl"),
+                "similarity_score": result["score"],
+            }
+        
+        # Step 3: Retrieve 512-dimensional vectors from Qdrant
+        vectors_map = qdrant_service.get_product_vectors(
+            product_ids=product_ids,
+            with_vectors=True
+        )
+        
+        if not vectors_map:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to retrieve product vectors from Qdrant"
+            )
+        
+        # Step 4: Prepare vectors in same order as product_ids
+        vectors = []
+        ordered_ids = []
+        for pid in product_ids:
+            if pid in vectors_map:
+                vectors.append(vectors_map[pid])
+                ordered_ids.append(pid)
+        
+        if len(vectors) < 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Not enough products to create 3D visualization (minimum 2 required)"
+            )
+        
+        # Step 5: Apply UMAP dimensionality reduction (512d → 3d)
+        logger.info(f"Reducing {len(vectors)} vectors from 512d to 3d using UMAP...")
+        coordinates_3d = qdrant_service.reduce_dimensions_umap(
+            vectors=vectors,
+            n_components=3,
+            n_neighbors=min(15, len(vectors) - 1),  # Adjust for small datasets
+            min_dist=0.1,
+            metric="cosine"
+        )
+        
+        # Step 6: Build response with products and 3D positions
+        products = []
+        for i, product_id in enumerate(ordered_ids):
+            metadata = product_metadata[product_id]
+            
+            product_point = ProductOrbitPoint(
+                product_id=product_id,
+                title=metadata["title"],
+                brand=metadata["brand"],
+                category=metadata["category"],
+                price=metadata["price"],
+                imgUrl=metadata["imgUrl"],
+                position={
+                    "x": float(coordinates_3d[i][0]),
+                    "y": float(coordinates_3d[i][1]),
+                    "z": float(coordinates_3d[i][2]),
+                },
+                similarity_score=metadata["similarity_score"]
+            )
+            products.append(product_point)
+        
+        logger.info(f"Successfully created orbit view with {len(products)} products")
+        
+        return OrbitViewResponse(
+            query_text=request.query_text,
+            query_position={"x": 0.0, "y": 0.0, "z": 0.0},  # Query at origin (center)
+            total_products=len(products),
+            products=products,
+            dimension_info={
+                "original_dimensions": 512,
+                "reduced_dimensions": 3,
+                "method": "UMAP",
+                "centered_at_origin": True,
+                "scale_range": "±10 units"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing orbit view request: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate orbit view: {str(e)}"
+        )

@@ -636,6 +636,113 @@ class QdrantService:
             logger.error(f"Failed to get collection info: {str(e)}")
             raise
 
+    def get_product_vectors(
+        self,
+        product_ids: List[int],
+        collection_name: Optional[str] = None,
+        with_vectors: bool = True,
+    ) -> Dict[int, List[float]]:
+        """
+        Retrieve raw embedding vectors for specific products from Qdrant
+
+        Args:
+            product_ids: List of product IDs to retrieve vectors for
+            collection_name: Name of the collection (uses default if not provided)
+            with_vectors: Whether to include vector data (True for orbit view)
+
+        Returns:
+            Dictionary mapping product_id to 512-dimensional vector
+        """
+        if not self.client:
+            self.connect()
+
+        collection_name = collection_name or self.collection_name
+
+        try:
+            # Retrieve points with vectors from Qdrant
+            points = self.client.retrieve(
+                collection_name=collection_name,
+                ids=product_ids,
+                with_vectors=with_vectors,
+            )
+
+            # Build mapping of product_id to vector
+            vectors_map = {}
+            for point in points:
+                if with_vectors and point.vector:
+                    vectors_map[point.id] = point.vector
+
+            logger.info(
+                f"Retrieved {len(vectors_map)} vectors from collection '{collection_name}'"
+            )
+            return vectors_map
+
+        except Exception as e:
+            logger.error(f"Failed to retrieve product vectors: {str(e)}")
+            raise
+
+    def reduce_dimensions_umap(
+        self,
+        vectors: List[List[float]],
+        n_components: int = 3,
+        n_neighbors: int = 15,
+        min_dist: float = 0.1,
+        metric: str = "cosine",
+    ) -> List[List[float]]:
+        """
+        Reduce high-dimensional vectors (512d) to 3D using UMAP
+        Normalizes coordinates so center of mass is at origin (0,0,0)
+
+        Args:
+            vectors: List of 512-dimensional vectors
+            n_components: Target dimensions (3 for 3D visualization)
+            n_neighbors: UMAP parameter controlling local vs global structure
+            min_dist: UMAP parameter controlling tightness of clusters
+            metric: Distance metric (cosine for semantic similarity)
+
+        Returns:
+            List of 3D coordinates [[x,y,z], ...] centered at origin
+        """
+        try:
+            import umap
+            import numpy as np
+
+            # Convert to numpy array
+            vectors_np = np.array(vectors)
+
+            # Apply UMAP dimensionality reduction
+            reducer = umap.UMAP(
+                n_components=n_components,
+                n_neighbors=n_neighbors,
+                min_dist=min_dist,
+                metric=metric,
+                random_state=42,  # For reproducibility
+            )
+
+            reduced = reducer.fit_transform(vectors_np)
+
+            # Normalize: Center at origin (0,0,0) by subtracting center of mass
+            center_of_mass = np.mean(reduced, axis=0)
+            normalized = reduced - center_of_mass
+
+            # Scale to reasonable range for 3D viewing (-10 to +10)
+            max_abs = np.max(np.abs(normalized))
+            if max_abs > 0:
+                normalized = (normalized / max_abs) * 10.0
+
+            logger.info(
+                f"Reduced {len(vectors)} vectors from {len(vectors[0])}d to {n_components}d using UMAP"
+            )
+
+            return normalized.tolist()
+
+        except ImportError:
+            logger.error("umap-learn not installed. Run: pip install umap-learn")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to reduce dimensions: {str(e)}")
+            raise
+
 
 # Singleton instance
 qdrant_service = QdrantService()
