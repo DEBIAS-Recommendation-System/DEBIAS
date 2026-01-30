@@ -14,6 +14,10 @@ export interface IProduct extends Tables<"products"> {
   price_after_discount: number;
   isInCart: boolean;
   isInWishlist: boolean;
+  // Additional fields from FastAPI backend
+  brand?: string;
+  category?: string;
+  product_id?: number;
 }
 
 export type QueryReturnType<T extends () => UseQueryOptions> = Awaited<

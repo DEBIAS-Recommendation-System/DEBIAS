@@ -11,6 +11,7 @@ type ProductProps = {
   image_url: string | null;
   price_after_discount: number;
   slug: string | undefined | null;
+  id: string | undefined | null;
 };
 
 export default function Product({
@@ -20,11 +21,13 @@ export default function Product({
   discount,
   image_url,
   slug,
+  id,
 }: Partial<ProductProps>) {
   console.log("price , discount , price_after_discount", price, discount, price_after_discount)
+  // Use id for product page, slug for edit page
   return (
     <Link
-      href={`/products/${slug}`}
+      href={`/products/${id || slug}`}
       className=" relative flex h-[22rem] sm:h-[25rem] w-[13rem] sm:w-[15rem] flex-col items-center justify-center gap-4 overflow-hidden"
     >
       <div className="group h-full w-full overflow-hidden rounded-md border transition-all ease-linear hover:backdrop-brightness-75">

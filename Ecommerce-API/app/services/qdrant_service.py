@@ -16,11 +16,11 @@ from qdrant_client.models import (
     PayloadSchemaType,
     HnswConfigDiff,
 )
-try:
-    from fastembed import TextEmbedding, ImageEmbedding
-except ImportError:
-    # Fallback for newer fastembed versions
-    from fastembed.embedding import TextEmbedding, ImageEmbedding
+from fastembed.text.text_embedding import TextEmbedding
+
+# ImageEmbedding not available in current fastembed version
+ImageEmbedding = None
+
 import logging
 
 from app.core.config import settings
