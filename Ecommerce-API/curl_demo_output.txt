@@ -1,0 +1,323 @@
+================================================================================
+  🚀 ORCHESTRATOR SERVICE USER JOURNEY DEMO (CURL VERSION)
+================================================================================
+
+API Base URL: http://localhost:8000
+User ID: 2
+
+
+================================================================================
+  📋 SETUP
+================================================================================
+
+🧹 Cleaning up previous test data for user 2...
+   Deleted {deleted} previous interactions from Neo4j
+✓ Setup complete
+
+================================================================================
+  🆕 PHASE 1: COLD START
+================================================================================
+
+Scenario: New user just landed on the site
+Expected: Popular/trending products
+
+[0;34mChecking user mode...[0m
+User Mode:
+{
+    "user_id": 2,
+    "mode": "cold_start",
+    "context": null,
+    "strategy_description": "New user mode: Showing popular and trending products to help you discover items while we learn your preferences."
+}
+
+[0;34mGetting initial recommendations...[0m
+Recommendations:
+Mode: cold_start
+Sources: trending
+Total: 5 recommendations
+
+Top 5 recommendations:
+{
+    "user_id": 2,
+    "mode": "cold_start",
+    "mode_context": null,
+    "total_count": 5,
+    "sources_used": [
+        "trending"
+    ],
+    "strategy": "New user mode: Showing popular and trending products to help you discover items while we learn your preferences.",
+    "recommendations": [
+        {
+            "product_id": 3701134,
+            "score": 26518.0,
+            "source": "trending",
+            "reason": "Popular with 12543 users",
+            "payload": null
+        },
+        {
+            "product_id": 100063161,
+            "score": 21542.0,
+            "source": "trending",
+            "reason": "Popular with 10068 users",
+            "payload": null
+        },
+        {
+            "product_id": 3700748,
+            "score": 477.0,
+            "source": "trending",
+            "reason": "Popular with 405 users",
+            "payload": null
+        },
+        {
+            "product_id": 5000475,
+            "score": 358.0,
+            "source": "trending",
+            "reason": "Popular with 285 users",
+            "payload": null
+        },
+        {
+            "product_id": 1307136,
+            "score": 228.0,
+            "source": "trending",
+            "reason": "Popular with 188 users",
+            "payload": null
+        }
+    ]
+}
+
+================================================================================
+  🔍 PHASE 2: BROWSING
+================================================================================
+
+Scenario: User starts browsing and viewing products
+Expected: Diverse recommendations based on viewed items
+
+User is browsing the following products:
+
+[1;33m1. Viewing Product #17302001...[0m
+  ✓ Logged view event
+[1;33m2. Viewing Product #17302017...[0m
+  ✓ Logged view event
+[1;33m3. Viewing Product #17303083...[0m
+  ✓ Logged view event
+[1;33m4. Viewing Product #17302639...[0m
+  ✓ Logged view event
+[1;33m5. Viewing Product #17302122...[0m
+  ✓ Logged view event
+
+⏳ Processing events...
+
+[0;34mGetting recommendations after browsing...[0m
+Mode: browsing
+Sources: semantic_similar, trending, behavioral
+Strategy: Exploring mode: Using semantic search with high diversity to show varied options similar to your rec...
+
+Top 10 recommendations:
+{
+    "user_id": 2,
+    "mode": "browsing",
+    "mode_context": {
+        "recent_interactions": 5
+    },
+    "total_count": 15,
+    "sources_used": [
+        "semantic_similar",
+        "trending",
+        "behavioral"
+    ],
+    "strategy": "Exploring mode: Using semantic search with high diversity to show varied options similar to your recent activity, combined with behavioral insights and trending items.",
+    "recommendations": [
+        {
+            "product_id": 3701134,
+            "score": 26518.0,
+            "source": "trending",
+            "reason": "Popular with 12543 users",
+            "payload": null
+        },
+        {
+            "product_id": 100063161,
+            "score": 21542.0,
+            "source": "trending",
+            "reason": "Popular with 10068 users",
+            "payload": null
+        },
+        {
+            "product_id": 4802036,
+            "score": 20868.0,
+            "source": "trending",
+            "reason": "Popular with 11548 users",
+            "payload": null
+        },
+        {
+            "product_id": 17301671,
+            "score": 68.0,
+            "source": "behavioral",
+            "reason": "Based on 6 similar users",
+            "payload": null
+        },
+        {
+            "product_id": 17300667,
+            "score": 67.0,
+            "source": "behavioral",
+            "reason": "Based on 5 similar users",
+            "payload": null
+        },
+        {
+            "product_id": 17301003,
+            "score": 55.0,
+            "source": "behavioral",
+            "reason": "Based on 5 similar users",
+            "payload": null
+        },
+        {
+            "product_id": 17300668,
+            "score": 46.0,
+            "source": "behavioral",
+            "reason": "Based on 4 similar users",
+            "payload": null
+        },
+        {
+            "product_id": 12300082,
+            "score": 0.8488644,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "DEWALT Breaker Hammer Bit, Clay Spade, Hex, 20-Inch x 1-1/8-Inch (DW5965)",
+                "brand": "dewalt",
+                "category": "construction.tools.drill",
+                "price": 76.58,
+                "image_url": "https://m.media-amazon.com/images/I/51aiQ11FwSL._AC_UL320_.jpg",
+                "text": "DEWALT Breaker Hammer Bit, Clay Spade, Hex, 20-Inch x 1-1/8-Inch (DW5965) dewalt construction.tools.drill",
+                "image_path": "temp_product_images/12300082.jpg"
+            }
+        },
+        {
+            "product_id": 32403555,
+            "score": 0.83867145,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "Mens Jeans Relaxed Fit \u2013 Straight Leg Stretch Jeans for Men \u2013 Ultimate Comfort Superflex Pants",
+                "brand": "comfort",
+                "category": "apparel.jeans",
+                "price": 26.0,
+                "image_url": "https://m.media-amazon.com/images/I/61+e3MHf30L._AC_UL320_.jpg",
+                "text": "Mens Jeans Relaxed Fit \u2013 Straight Leg Stretch Jeans for Men \u2013 Ultimate Comfort Superflex Pants comfort apparel.jeans",
+                "image_path": "temp_product_images/32403555.jpg"
+            }
+        },
+        {
+            "product_id": 45600181,
+            "score": 0.8368069,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "PUMA",
+                "brand": "puma",
+                "category": "apparel.trousers",
+                "price": 36.01,
+                "image_url": "https://m.media-amazon.com/images/I/51YXj74s-wL._AC_UL320_.jpg",
+                "text": "PUMA puma apparel.trousers",
+                "image_path": "temp_product_images/45600181.jpg"
+            }
+        },
+        {
+            "product_id": 28102023,
+            "score": 0.8332254,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "Premium Velvet Leggings for Women - Ultra-Soft Warm Velour Pants",
+                "brand": "velvet",
+                "category": "apparel.pajamas",
+                "price": 28.79,
+                "image_url": "https://m.media-amazon.com/images/I/719ojGTQDRL._AC_UL320_.jpg",
+                "text": "Premium Velvet Leggings for Women - Ultra-Soft Warm Velour Pants velvet apparel.pajamas",
+                "image_path": "temp_product_images/28102023.jpg"
+            }
+        },
+        {
+            "product_id": 100051891,
+            "score": 0.8321564,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "Women's Modern Fit Lux Pant with Belt",
+                "brand": "lux",
+                "category": "apparel.shirt",
+                "price": 78.43,
+                "image_url": "https://m.media-amazon.com/images/I/81fwcTOVntL._AC_UL320_.jpg",
+                "text": "Women's Modern Fit Lux Pant with Belt lux apparel.shirt",
+                "image_path": "temp_product_images/100051891.jpg"
+            }
+        },
+        {
+            "product_id": 39900035,
+            "score": 0.8049063,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "Men's Sweatpants Cotton/Polyester Blend Jordan DA6803",
+                "brand": "jordan",
+                "category": "apparel.trousers",
+                "price": 73.34,
+                "image_url": "https://m.media-amazon.com/images/I/81RoANb1N4S._AC_UL320_.jpg",
+                "text": "Men's Sweatpants Cotton/Polyester Blend Jordan DA6803 jordan apparel.trousers",
+                "image_path": "temp_product_images/39900035.jpg"
+            }
+        },
+        {
+            "product_id": 10201665,
+            "score": 0.78826076,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "Mattel GJB74 Holiday Barbie Doll, 3 Years Old and Above",
+                "brand": "barbie",
+                "category": "kids.dolls",
+                "price": 17.99,
+                "image_url": "https://m.media-amazon.com/images/I/61YQQuz1dbL._AC_UL320_.jpg",
+                "text": "Mattel GJB74 Holiday Barbie Doll, 3 Years Old and Above barbie kids.dolls",
+                "image_path": "temp_product_images/10201665.jpg"
+            }
+        },
+        {
+            "product_id": 28705191,
+            "score": 0.78672326,
+            "source": "semantic_similar",
+            "reason": "Similar to recently viewed item",
+            "payload": {
+                "title": "BOBS from Skechers Women's Plush Fashion Slip-On Flat",
+                "brand": "skechers",
+                "category": "apparel.shoes.slipons",
+                "price": 36.04,
+                "image_url": "https://m.media-amazon.com/images/I/61H3jJSbjzL._AC_UL320_.jpg",
+                "text": "BOBS from Skechers Women's Plush Fashion Slip-On Flat skechers apparel.shoes.slipons",
+                "image_path": "temp_product_images/28705191.jpg"
+            }
+        }
+    ]
+}
+
+================================================================================
+  🔍 PHASE 3: CONTINUED BROWSING
+================================================================================
+
+Scenario: User views more products in different categories
+
+User continues browsing:
+
+[1;33m1. Viewing Product #5000096...[0m
+  ✓ Logged view event
+[1;33m2. Viewing Product #5000315...[0m
+  ✓ Logged view event
+[1;33m3. Viewing Product #5000770...[0m
+  ✓ Logged view event
+
+⏳ Processing events...
+
+[0;34mGetting updated recommendations...[0m
+  File "<string>", line 4
+    print(\'Mode: {}\'.format(data.get(\'mode\')))
+           ^
+SyntaxError: unexpected character after line continuation character
