@@ -9,6 +9,7 @@ from app.routers import (
     recommendations,
     behavioral_recommendations,
     orchestrator,
+    rabbitmq,
 )
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -86,6 +87,7 @@ app.include_router(events.router)
 app.include_router(recommendations.router)
 app.include_router(behavioral_recommendations.router)
 app.include_router(orchestrator.router)
+app.include_router(rabbitmq.router)
 
 
 @app.on_event("startup")

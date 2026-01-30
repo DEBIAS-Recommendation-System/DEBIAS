@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str = "testing_password"
 
+    # RabbitMQ Config
+    rabbitmq_hostname: str = "localhost"
+    rabbitmq_port: int = 5672
+    rabbitmq_user: str = "admin"
+    rabbitmq_password: str = "admin123"
+    rabbitmq_vhost: str = "/"
+
     class Config:
         env_file = ".env"
 
