@@ -4,6 +4,15 @@ import { cartQuery } from "./cartQuery";
 
 export default function useCart() {
   const query = useQuery(cartQuery());
+  
+  // Debug logging
+  console.log("🛒 [USE CART] Query state:", {
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    data: query.data,
+  });
+  
   const total_after_discount =
     query.data?.data?.reduce(
       (a, cartItem) =>
@@ -32,7 +41,9 @@ export default function useCart() {
     ...query,
     data: {
       ...query.data?.data,
-      data:query.data?.data,
+      data: query.data?.data,
+      cartId: query.data?.cartId,
+      totalAmount: query.data?.totalAmount,
       total_before_discount,
       total_after_discount,
       total_with_delivery: total_after_discount + delivery_cost,
