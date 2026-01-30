@@ -1,13 +1,13 @@
 "use client";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import useTranslation from "@/translation/useTranslation";
 import CustomSwiper from "@/app/ui/Swiper";
 import useProductById from "@/hooks/data/products/useProductById";
 import { WishlistHart } from "@/app/(dashboard)/ui/home/ui/ProductsSection/WishListHart";
 import AddToCartBtn from "@/app/(dashboard)/ui/home/ui/ProductsSection/AddToCartBtn";
-import { useEffect } from "react";
-import { sendEvent } from "@/actions/events/sendEvent";
+import { trackEvent } from "@/utils/eventTracking";
 import { getSessionId } from "@/utils/session";
 
 export default function ProductDetails() {
@@ -17,17 +17,33 @@ export default function ProductDetails() {
   const { data } = useProductById(String(productId));
   const product = data?.data;
   
-  // Send view event when product is loaded
+  // Track if view event has been sent to avoid duplicates
+  const hasTrackedView = useRef(false);
+  
+  // Send view event when page mounts for the first time
   useEffect(() => {
-    if (product?.product_id) {
-      const sessionId = getSessionId();
-      sendEvent({
-        event_type: "view",
-        product_id: product.product_id,
-        user_session: sessionId,
-      }).catch(err => console.error("Failed to send view event:", err));
-    }
-  }, [product?.product_id]);
+    console.log("ProductDetails mounted");
+    if (hasTrackedView.current) return;
+    if (!productId) return;
+    
+    const numericId = parseInt(String(productId));
+    if (isNaN(numericId)) return;
+    
+    const sessionId = getSessionId();
+    
+    console.log("👁️ [VIEW EVENT] Product page mounted, sending view event:", {
+      product_id: numericId,
+      session_id: sessionId,
+    },[]);
+    
+    trackEvent({
+      event_type: "view",
+      product_id: numericId,
+      user_session: sessionId,
+    });
+    
+    hasTrackedView.current = true;
+  }, [productId]);
   
   // Calculate discount percentage if applicable
   const discountPercentage = product?.discount || 0;
@@ -60,12 +76,16 @@ export default function ProductDetails() {
                 ].filter(Boolean).map((url) => (
                   <Image
                     key={url}
-                    className="object-contain w-full h-full"
+                    className="object-contain w-full h-full p-4"
                     width={800}
                     height={800}
-                    src={url ?? ""}
+                    src={url ?? "/product/placeholder.png"}
                     alt={product?.title || "Product Image"}
                     priority
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/product/placeholder.png";
+                    }}
                   />
                 ))}
               />

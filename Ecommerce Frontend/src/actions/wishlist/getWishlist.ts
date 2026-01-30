@@ -28,7 +28,7 @@ export default async function getWishlist({
     page: number;
   };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   let query = supabase.from(tableName).select(
     `*, 
     products (*)`,

@@ -14,7 +14,7 @@ export default async function deleteData<ITableName extends dbTableType>({
     in: string[];
   };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   let query = supabase.from(tableName).delete();
   if (match) {
     query = query.match(match);

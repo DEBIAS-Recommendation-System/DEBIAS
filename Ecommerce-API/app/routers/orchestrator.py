@@ -427,6 +427,9 @@ async def get_similar_to_recent_activity(request: SimilarToRecentRequest):
             exclude_product_ids=request.exclude_product_ids
         )
         
+        # Enrich recommendations with product data
+        results = service.enrich_recommendations_with_payload(results)
+        
         return {
             "user_id": request.user_id,
             "count": len(results),
@@ -468,6 +471,9 @@ async def get_complementary_products(request: ComplementaryRequest):
             limit=request.limit
         )
         
+        # Enrich recommendations with product data
+        results = service.enrich_recommendations_with_payload(results)
+        
         return {
             "user_id": request.user_id,
             "purchased_product_id": request.purchased_product_id,
@@ -501,6 +507,9 @@ async def get_behavioral_recommendations(
         service = get_service()
         
         results = service.get_behavioral_recommendations(user_id, limit)
+        
+        # Enrich recommendations with product data
+        results = service.enrich_recommendations_with_payload(results)
         
         return {
             "user_id": user_id,
@@ -537,6 +546,9 @@ async def get_trending(
         
         event_types = [event_type] if event_type else None
         results = service.get_trending_items(limit, event_types)
+        
+        # Enrich recommendations with product data
+        results = service.enrich_recommendations_with_payload(results)
         
         return {
             "count": len(results),

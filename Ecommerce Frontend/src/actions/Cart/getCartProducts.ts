@@ -20,7 +20,7 @@ export default async function getCartProducts({
     page: number;
   };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   let query = supabase.from(tableName).select("*", count).in("id", productsIds);
   if (pagination) {
     const { start, end } = paginateQuery(pagination);

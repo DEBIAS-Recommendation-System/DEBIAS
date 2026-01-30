@@ -62,18 +62,30 @@ export default function LoginWithPassword() {
 
       const username = formObject.get("username") as string;
       const password = formObject.get("password") as string;
-      const { error } = await login({ username, password });
+      const result = await login({ username, password });
 
-      if (error) {
-        setErrors({ general: error.message });
-        throw error;
+      if (result.error) {
+        setErrors({ general: result.error.message });
+        throw result.error;
       }
+      
+      // Store tokens client-side
+      if (result.data) {
+        localStorage.setItem('access_token', result.data.access_token);
+        localStorage.setItem('refresh_token', result.data.refresh_token);
+        console.log('✅ Login successful - tokens stored');
+      }
+      
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries();
+      // Invalidate user query to fetch user data with the new token
+      queryClient.invalidateQueries({ queryKey: ['user'] });
       setSuccessMessage(translation?.lang["Login successful"] ?? "");
-      // Navigate to home page after successful login
-      router.push("/");
+      // Small delay to allow user query to update
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
     },
   });
 

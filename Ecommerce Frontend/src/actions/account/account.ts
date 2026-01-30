@@ -1,13 +1,13 @@
-"use server";
+"use client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function getMyInfo() {
   try {
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const token = localStorage.getItem("access_token");
     
     if (!token) {
-      return { error: { message: "Not authenticated", type: "Auth Error" } };
+      return { data: null, error: { message: "Not authenticated", type: "Auth Error" } };
     }
 
     const response = await fetch(`${API_URL}/me/`, {
@@ -21,6 +21,7 @@ export async function getMyInfo() {
     if (!response.ok) {
       const errorData = await response.json();
       return {
+        data: null,
         error: {
           message: errorData.detail || "Failed to fetch user info",
           type: "Fetch Error",
@@ -32,6 +33,7 @@ export async function getMyInfo() {
     return { data, error: null };
   } catch (err) {
     return {
+      data: null,
       error: {
         message: err instanceof Error ? err.message : "Network error",
         type: "Network Error",
@@ -50,10 +52,10 @@ export async function updateMyInfo({
   full_name: string;
 }) {
   try {
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const token = localStorage.getItem("access_token");
     
     if (!token) {
-      return { error: { message: "Not authenticated", type: "Auth Error" } };
+      return { data: null, error: { message: "Not authenticated", type: "Auth Error" } };
     }
 
     const response = await fetch(`${API_URL}/me/`, {
@@ -72,6 +74,7 @@ export async function updateMyInfo({
     if (!response.ok) {
       const errorData = await response.json();
       return {
+        data: null,
         error: {
           message: errorData.detail || "Failed to update user info",
           type: "Update Error",
@@ -83,6 +86,7 @@ export async function updateMyInfo({
     return { data, error: null };
   } catch (err) {
     return {
+      data: null,
       error: {
         message: err instanceof Error ? err.message : "Network error",
         type: "Network Error",
@@ -93,10 +97,10 @@ export async function updateMyInfo({
 
 export async function deleteMyAccount() {
   try {
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const token = localStorage.getItem("access_token");
     
     if (!token) {
-      return { error: { message: "Not authenticated", type: "Auth Error" } };
+      return { data: null, error: { message: "Not authenticated", type: "Auth Error" } };
     }
 
     const response = await fetch(`${API_URL}/me/`, {
@@ -110,6 +114,7 @@ export async function deleteMyAccount() {
     if (!response.ok) {
       const errorData = await response.json();
       return {
+        data: null,
         error: {
           message: errorData.detail || "Failed to delete account",
           type: "Delete Error",
@@ -120,14 +125,13 @@ export async function deleteMyAccount() {
     const data = await response.json();
     
     // Clear tokens after successful account deletion
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-    }
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     
     return { data, error: null };
   } catch (err) {
     return {
+      data: null,
       error: {
         message: err instanceof Error ? err.message : "Network error",
         type: "Network Error",

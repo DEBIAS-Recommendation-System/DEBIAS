@@ -51,7 +51,7 @@ export default async function getOrders({
   search,
   filter,
 }: getOrdersParams) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   let query = supabase
     .from("orders")

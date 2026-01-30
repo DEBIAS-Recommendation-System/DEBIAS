@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { productsApi, recommendationsApi } from "@/api/fastapi";
 import { ProductBase } from "@/types/fastapi";
 import { PaginationParams } from "@/types/fastapi";
@@ -205,8 +206,8 @@ function ProductCard({ product }: { product: ProductBase }) {
     <div className="product-card overflow-hidden rounded-lg bg-white shadow-md transition-shadow hover:shadow-xl">
       {/* Product Image */}
       <div className="relative h-48 bg-gray-100">
-        <img
-          src={product.imgUrl}
+        <Image
+          src={product.imgUrl || "/product/placeholder.png"}
           alt={product.title}
           className="h-full w-full object-cover"
         />

@@ -5,50 +5,88 @@ import { ProductSwiper } from "./ProductSwiper";
 import useTranslation from "@/translation/useTranslation";
 import useProductById from "@/hooks/data/products/useProductById";
 import { useQuery } from "@tanstack/react-query";
-import getSemanticSearch from "@/actions/products/getSemanticSearch";
+import { getRecommendationsByUserId, OrchestratorRecommendation } from "@/actions/orchestrator";
 import { formatProduct } from "@/hooks/data/products/formatProducts";
 import useCart from "@/hooks/data/cart/useCart";
 import useWishlist from "@/hooks/data/wishlist/useWishlist";
+import { useEffect, useState } from "react";
+
+// Helper to get or create a user ID for recommendations
+function getUserIdForRecommendations(): number {
+  if (typeof window === "undefined") return 1;
+  
+  let userId = localStorage.getItem("recommendation_user_id");
+  if (!userId) {
+    userId = String(Math.floor(Math.random() * 100000) + 1);
+    localStorage.setItem("recommendation_user_id", userId);
+  }
+  return parseInt(userId, 10);
+}
+
+// Transform orchestrator recommendation to product format
+function transformRecommendationToProduct(rec: OrchestratorRecommendation) {
+  const payload = rec.payload || {};
+  return {
+    id: String(rec.product_id),
+    product_id: rec.product_id,
+    title: payload.title || `Product #${rec.product_id}`,
+    price: payload.price || 0,
+    imgUrl: payload.imgUrl || payload.image_url || null,
+    brand: payload.brand,
+    category: payload.category,
+    description: payload.description || "",
+    stock: 100,
+    discount: 0,
+    discount_type: "percentage" as const,
+    category_id: 1,
+    created_at: new Date().toISOString(),
+    extra_images_urls: null,
+    slug: null,
+    subtitle: "",
+    wholesale_price: payload.price || 0,
+    score: rec.score,
+    source: rec.source,
+  };
+}
 
 export default function RecommendationSection() {
   const { slug } = useParams(); // This is actually the product ID
   const productId = Array.isArray(slug) ? slug[0] : slug;
   const { data } = useProductById(String(productId));
   const product = data?.data;
+  const [userId, setUserId] = useState<number>(1);
   
   const { data: cart } = useCart();
   const { data: wishlist } = useWishlist();
+
+  // Get user ID on client side
+  useEffect(() => {
+    setUserId(getUserIdForRecommendations());
+  }, []);
   
-  // Fetch recommendations using semantic search based on current product
-  // This endpoint returns full product objects and has a fallback to regular search
-  const { data: semanticSearchResponse, isLoading } = useQuery({
-    queryKey: ["product-recommendations", product?.id, product?.category],
+  // Fetch recommendations using orchestrator endpoint
+  const { data: recommendationsResponse, isLoading } = useQuery({
+    queryKey: ["product-recommendations", product?.id, userId],
     queryFn: async () => {
-      if (!product?.title) return null;
+      if (!product?.id) return null;
       
-      // Create a semantic query based on the current product
-      const searchQuery = `${product.category} ${product.brand} similar to ${product.title}`;
-      
-      return await getSemanticSearch({
-        query: searchQuery,
-        limit: 12,
-        category: product.category,
-        use_mmr: true,
-        mmr_diversity: 0.6,
-      });
+      const result = await getRecommendationsByUserId(userId, 12, true);
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
     },
-    enabled: !!product?.id && !!product?.title,
+    enabled: !!product?.id && userId > 0,
   });
   
   // Format products with cart and wishlist data
-  const products = semanticSearchResponse?.data
-    ?.filter((p) => p.id !== product?.id) // Exclude the current product
-    ?.map((p) =>
-      formatProduct(p, {
-        cart: cart?.data?.map((item) => item.id),
+  const products = recommendationsResponse?.recommendations
+    ?.filter((rec) => String(rec.product_id) !== product?.id) // Exclude the current product
+    ?.map((rec) => {
+      const transformedProduct = transformRecommendationToProduct(rec);
+      return formatProduct(transformedProduct, {
+        cart: cart?.data?.map((item: any) => item.id),
         wishlist: wishlist?.data,
-      })
-    ) || [];
+      });
+    }) || [];
   
   const { data: translation } = useTranslation();
   
@@ -75,7 +113,7 @@ export default function RecommendationSection() {
         />
       </div>
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-        <span className="font-semibold">Similar to:</span> {product?.title}
+        <span className="font-semibold">Based on your browsing history</span>
       </div>
       <ProductSwiper products={products} />
     </div>

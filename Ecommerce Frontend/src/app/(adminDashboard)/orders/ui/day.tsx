@@ -13,7 +13,7 @@ export default function Day({ date, orders }: { orders: Tables<"orders">[]; date
   useEffect(() => {
     setHasCancelledOrder(orders.some((order: Tables<"orders">) => order.status === 'cancelled'));
     setHasPendingOrder(orders.some((order: Tables<"orders">) => order.status === 'pending')); 
-  }, [date]);
+  }, [orders]);
 
   let statusIcon;
   if (hasCancelledOrder) {

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       console.error(error + " description :" + error_description);
       throw new Error("code is not defined");
     }
-    const supabase = createClient();
+    const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);
     const redirectUrl = `${requestUrl.protocol}//${requestUrl.host}/home`;
     return NextResponse.redirect(redirectUrl);

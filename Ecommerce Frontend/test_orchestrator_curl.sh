@@ -6,7 +6,7 @@
 set -e  # Exit on error
 
 API_BASE="http://localhost:8000"
-USER_ID=4  # Use a different user to avoid conflicts
+USER_ID=2  # Use a different user to avoid conflicts
 
 echo "================================================================================"
 echo "  🚀 ORCHESTRATOR SERVICE USER JOURNEY DEMO (CURL VERSION)"
@@ -102,8 +102,8 @@ echo "Scenario: User starts browsing and viewing products"
 echo "Expected: Diverse recommendations based on viewed items"
 echo ""
 
-# View 5 products (electronics/toys)
-PRODUCT_IDS=(100063161 1307136 10201665 12300082 28705191)
+# View 5 products (jeans)
+PRODUCT_IDS=(17302001 17302017 17303083 17302639 17302122)
 
 echo "User is browsing the following products:"
 echo ""
@@ -112,11 +112,7 @@ for i in "${!PRODUCT_IDS[@]}"; do
     PRODUCT_ID=${PRODUCT_IDS[$i]}
     SESSION_ID="session_${USER_ID}_$(date +%s)"
     
-    # Get product name
-    PRODUCT_NAME=$(curl -s "$API_BASE/products/$PRODUCT_ID" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('title', 'Unknown')[:60])" 2>/dev/null || echo "Product #$PRODUCT_ID")
-    
-    echo -e "${YELLOW}$((i+1)). Viewing: $PRODUCT_NAME${NC}"
-    echo "   (Product ID: $PRODUCT_ID)"
+    echo -e "${YELLOW}$((i+1)). Viewing Product #$PRODUCT_ID...${NC}"
     
     # Track view event
     VIEW_RESPONSE=$(curl -s -X POST "$API_BASE/events/" \
@@ -153,7 +149,7 @@ print('Sources: {}'.format(', '.join(data.get('sources_used', []))))
 print('Strategy: {}...'.format(str(data.get('strategy', ''))[:100]))
 print('\\nTop 10 recommendations:')
 for i, rec in enumerate(data.get('recommendations', [])[:10], 1):
-    payload = rec.get('payload') or {}
+    payload = rec.get('payload', {})
     title = payload.get('title', 'Product #{}'.format(rec['product_id']))[:60]
     print('  {}. {}'.format(i, title))
     print('     Source: {} | Score: {:.2f}'.format(rec['source'], rec['score']))
@@ -169,8 +165,8 @@ print_section "🔍 PHASE 3: CONTINUED BROWSING"
 echo "Scenario: User views more products in different categories"
 echo ""
 
-# View 3 more products (apparel)
-MORE_PRODUCTS=(32403555 45600181 28102023)
+# View 3 more products (sewing machines)
+MORE_PRODUCTS=(5000096 5000315 5000770)
 
 echo "User continues browsing:"
 echo ""
@@ -179,11 +175,7 @@ for i in "${!MORE_PRODUCTS[@]}"; do
     PRODUCT_ID=${MORE_PRODUCTS[$i]}
     SESSION_ID="session_${USER_ID}_$(date +%s)"
     
-    # Get product name
-    PRODUCT_NAME=$(curl -s "$API_BASE/products/$PRODUCT_ID" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('title', 'Unknown')[:60])" 2>/dev/null || echo "Product #$PRODUCT_ID")
-    
-    echo -e "${YELLOW}$((i+1)). Viewing: $PRODUCT_NAME${NC}"
-    echo "   (Product ID: $PRODUCT_ID)"
+    echo -e "${YELLOW}$((i+1)). Viewing Product #$PRODUCT_ID...${NC}"
     
     curl -s -X POST "$API_BASE/events/" \
         -H "Content-Type: application/json" \
@@ -237,16 +229,12 @@ else:
     print('3701134')  # Fallback
 " 2>/dev/null || echo "3701134")
 
-# Get product name
-PURCHASE_NAME=$(curl -s "$API_BASE/products/$PURCHASE_PRODUCT" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('title', 'Unknown')[:70])" 2>/dev/null || echo "Product #$PURCHASE_PRODUCT")
-
-echo "✓ Selected: $PURCHASE_NAME"
-echo "   (Product ID: $PURCHASE_PRODUCT)"
+echo "✓ Selected product #$PURCHASE_PRODUCT (has co-purchase data)"
 echo ""
 
 SESSION_ID="session_${USER_ID}_$(date +%s)"
 
-echo -e "${GREEN}🎉 Purchasing: $PURCHASE_NAME${NC}"
+echo -e "${GREEN}🎉 User is purchasing Product #$PURCHASE_PRODUCT${NC}"
 
 # Track purchase event
 PURCHASE_RESPONSE=$(curl -s -X POST "$API_BASE/events/" \
@@ -282,7 +270,7 @@ print('Strategy: {}...'.format(str(data.get('strategy', ''))[:100]))
 print('\\nTop 10 recommendations:')
 complementary_count = 0
 for i, rec in enumerate(data.get('recommendations', [])[:10], 1):
-    payload = rec.get('payload') or {}
+    payload = rec.get('payload', {})
     title = payload.get('title', 'Product #{}'.format(rec['product_id']))[:60]
     source = rec['source']
     if source == 'complementary':
@@ -336,7 +324,7 @@ print('Has More: {}'.format(data.get('has_more')))
 print('\\nTop 10 For You recommendations:')
 complementary_count = 0
 for i, rec in enumerate(data.get('recommendations', []), 1):
-    payload = rec.get('payload') or {}
+    payload = rec.get('payload', {})
     title = payload.get('title', 'Product #{}'.format(rec['product_id']))[:60]
     source = rec['source']
     if source == 'complementary':
