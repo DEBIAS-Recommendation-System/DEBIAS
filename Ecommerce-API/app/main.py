@@ -15,6 +15,7 @@ from app.routers import (
     recommendations,
     behavioral_recommendations,
     orchestrator,
+    rabbitmq,
 )
 
 
@@ -90,6 +91,7 @@ app.include_router(events.router)
 app.include_router(recommendations.router)
 app.include_router(behavioral_recommendations.router)
 app.include_router(orchestrator.router)
+app.include_router(rabbitmq.router)
 
 
 @app.on_event("startup")
