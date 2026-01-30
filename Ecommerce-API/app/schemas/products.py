@@ -49,6 +49,7 @@ class ProductOut(BaseModel):
 class ProductsOut(BaseModel):
     message: str
     data: List[ProductBase]
+    total_count: int
 
     class Config(BaseConfig):
         pass
