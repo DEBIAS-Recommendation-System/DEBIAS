@@ -15,6 +15,7 @@
   <img src="https://img.shields.io/badge/Graph-Cold%20Start%20Solver-orange" />
 </p>
 
+
 > **DEBIAS a recommender system that also doubles as a consumer-centric platform for digital commerce.**  
 > It combines semantic understanding, budget awareness, and debiased learning to ensure users discover products that are *relevant, affordable, and fair* and *also popular*.
 
@@ -125,6 +126,37 @@ DEBIAS is designed as a **modular, scalable, and consumer-first platform** that 
 5. **Neo4j** enriches results with behavioral signals
 6. Debiasing logic corrects exposure effects
 7. Final ranking emphasizes **relevance, affordability, and fairness**
+
+---
+
+## ⚡Qdrant Implementation⚡
+
+DEBIAS leverages **Qdrant** as its high-performance vector database for semantic product search and multimodal retrieval.
+
+### Embedding Models
+
+| Model | Type | Dimensions | Use Case |
+|-------|------|------------|----------|
+| `Qdrant/clip-ViT-B-32-text` | CLIP Text | 512 | Multimodal text queries |
+| `Qdrant/clip-ViT-B-32-vision` | CLIP Vision | 512 | Image similarity search |
+
+### Key Features
+
+- **Multimodal Search**: Query products using text *or* images with CLIP embeddings
+- **Payload Indexing**: Optimized filters for category, brand, and price range
+- **MMR (Maximal Marginal Relevance)**: Balances relevance with diversity in results
+- **HNSW Optimization**: Tuned for e-commerce filtering patterns for memory efficiency
+
+**Parameters:**
+| Parameter | Description |
+|-----------|-------------|
+| `text_query` | Natural language search query |
+| `image_query` | Image search query |
+| `limit` | Number of results (default: 10) |
+| `score_threshold` | Minimum similarity score (0-1) |
+| `category` | Filter by category |
+| `use_mmr` | Enable diverse results |
+| `mmr_diversity` | Balance relevance vs diversity (0-1) |
 
 ---
 
@@ -247,8 +279,13 @@ DEBIAS enables:
 - 🔎 Trustworthy, transparent recommendations
 
 
-***We're very happy to step closer towards consumer-first AI for digital marketplaces.***
+**We're very proud to step closer towards consumer-first AI for digital marketplaces. you can try Debias now:**
 
+<p align="center">
+  <a href="http://34.155.51.100:3000/">
+    <img src="https://img.shields.io/badge/🌐%20Live%20Demo-Try%20DEBIAS-brightgreen?style=for-the-badge" alt="Live Demo" />
+  </a>
+</p>
 ---
 
 ## 👨‍💻 Team
