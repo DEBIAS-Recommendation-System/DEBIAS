@@ -353,8 +353,7 @@ export default function useCreateOrder() {
     },
     onSuccess: async (result) => {
       toast.success(
-        translation?.lang["Purchase completed successfully! Thank you for your order."] ??
-          "🎉 Purchase completed successfully! Thank you for your order.",
+        "🎉 Purchase completed successfully! Thank you for your order.",
       );
       await queryClient.invalidateQueries({
         queryKey: ["cart"],

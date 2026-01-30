@@ -32,7 +32,7 @@ export interface ICartItem {
   subtotal: number;
   // Additional fields that might be needed by the UI
   discount: number;
-  discount_type: string;
+  discount_type: "percentage" | "fixed";
   stock: number;
   description: string;
   subtitle: string;
@@ -76,7 +76,7 @@ const cartQuery = () => ({
             subtotal: item.subtotal,
             // Default values for fields not in FastAPI response
             discount: 0,
-            discount_type: "FIXED",
+            discount_type: "fixed",
             stock: 100, // Assume in stock
             description: "",
             subtitle: "",
@@ -144,7 +144,7 @@ const cartQuery = () => ({
       quantity: item.quantity,
       subtotal: 0,
       discount: 0,
-      discount_type: "FIXED",
+      discount_type: "fixed",
       stock: 100,
       description: "",
       subtitle: "",
