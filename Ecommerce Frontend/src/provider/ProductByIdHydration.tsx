@@ -1,6 +1,6 @@
 "use server";
 import { QueriesConfig } from "@/constants/QueriesConfig";
-import { productBySlugQuery } from "@/hooks/data/products/productBySlugQuery";
+import { productByIdQuery } from "@/hooks/data/products/productByIdQuery";
 import {
   QueryClient,
   dehydrate,
@@ -9,16 +9,16 @@ import {
 import React from "react";
 export default async function ProductByIdHydration({
   children,
-  slug,
+  productId,
 }: {
   children: React.ReactNode;
-  slug: string;
+  productId: string;
 }) {
   const queryClient = new QueryClient(QueriesConfig);
   await Promise.all([
     queryClient.prefetchQuery(
-      productBySlugQuery({
-        slug,
+      productByIdQuery({
+        productId,
       }),
     ),
   ]);

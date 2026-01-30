@@ -7,6 +7,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import useCart from "../cart/useCart";
 import { sendMail } from "@/api/sendEmail";
+import { sendBatchEvents } from "@/actions/events/sendEvent";
+import { getSessionId } from "@/utils/session";
 
 export default function useCreateOrder() {
   const queryClient = useQueryClient();
@@ -295,6 +297,22 @@ export default function useCreateOrder() {
       localStorage.clear();
     },
     onSuccess: async () => {
+      // Send purchase events to Neo4j for all cart items
+      try {
+        const sessionId = getSessionId();
+        if (cart?.data && Array.isArray(cart.data)) {
+          const purchaseEvents = cart.data.map((item: any) => ({
+            event_type: "purchase" as const,
+            product_id: item.product_id,
+            user_session: sessionId,
+          }));
+          await sendBatchEvents(purchaseEvents);
+        }
+      } catch (error) {
+        console.error("Failed to send purchase events:", error);
+        // Don't fail the order if event tracking fails
+      }
+
       toast.success(
         translation?.lang["Order created successfully"] ??
           "Order created successfully",

@@ -13,6 +13,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface SemanticProduct {
   product_id: number;
+  id: string; // Transformed from product_id
   title: string;
   price: number;
   imgUrl?: string;
@@ -83,7 +84,14 @@ export default function SemanticSearchBar() {
       }
 
       const data: SemanticSearchResponse = await response.json();
-      setProducts(data.data || []);
+      
+      // Transform product_id to id for frontend compatibility
+      const transformedProducts = (data.data || []).map(product => ({
+        ...product,
+        id: String(product.product_id),
+      }));
+      
+      setProducts(transformedProducts);
       setScores(data.scores || {});
       setIsOpen(true);
     } catch (error) {
@@ -205,7 +213,7 @@ function SearchResultProduct({
 }) {
   return (
     <Link
-      href={`/products/${product.product_id}`}
+      href={`/products/${product.id}`}
       onClick={() => {
         setValue("");
         setIsOpen(false);

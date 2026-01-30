@@ -177,3 +177,34 @@ export interface PaginationParams {
 export interface UserQueryParams extends PaginationParams {
   role?: "user" | "admin";
 }
+
+// ==================== RECOMMENDATION TYPES ====================
+export interface ProductRecommendation {
+  id: number;
+  score: number;
+  title: string;
+  brand?: string;
+  category?: string;
+  price?: number;
+  image_url?: string;
+  description?: string;
+}
+
+export interface RecommendationRequest {
+  query_text?: string;
+  query_image?: string;
+  limit?: number;
+  score_threshold?: number;
+  filters?: Record<string, any>;
+  use_mmr?: boolean;
+  mmr_diversity?: number;
+  mmr_candidates?: number;
+}
+
+export interface RecommendationResponse {
+  query_type: string;
+  total_results: number;
+  recommendations: ProductRecommendation[];
+  filters_applied?: Record<string, any>;
+}
+

@@ -10,11 +10,11 @@ export default function Page({
   params,
 }: {
   params: {
-    slug: string;
+    slug: string; // This is actually the product ID now
   };
 }) {
   return (
-    <ProductByIdHydration slug={params.slug}>
+    <ProductByIdHydration productId={params.slug}>
       <div className="mb-20 flex flex-col">
         <Image
           src={"/product/opsti-uslovi_header.jpg"}
