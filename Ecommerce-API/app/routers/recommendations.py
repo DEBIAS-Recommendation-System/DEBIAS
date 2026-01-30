@@ -249,7 +249,7 @@ async def get_orbit_view(request: OrbitViewRequest):
     visualization where products are positioned by semantic similarity.
     
     **Process:**
-    1. Performs vector search using the query text
+    1. Performs vector search using the query text (or scroll with filters as fallback)
     2. Retrieves 512-dimensional embeddings for top N products
     3. Applies UMAP dimensionality reduction (512d → 3d)
     4. Normalizes coordinates so center of mass is at origin (0,0,0)
@@ -271,16 +271,44 @@ async def get_orbit_view(request: OrbitViewRequest):
     try:
         logger.info(f"Processing orbit view request: query='{request.query_text}', limit={request.limit}")
         
-        # Step 1: Perform vector search to get relevant products
-        search_results = qdrant_service.search(
-            query_text=request.query_text,
-            limit=request.limit,
-            score_threshold=0.3,  # Lower threshold to get more products for visualization
-            collection_name="products",
-            filter_conditions=request.filters,
-            use_mmr=True,  # Use MMR for diverse product selection
-            mmr_diversity=0.7,  # High diversity for better 3D spread
-        )
+        search_results = None
+        use_fallback = False
+        
+        # Step 1: Try vector search first
+        try:
+            search_results = qdrant_service.search(
+                query_text=request.query_text,
+                limit=request.limit,
+                score_threshold=0.1,  # Low threshold for CLIP embeddings (scores ~0.25-0.35)
+                collection_name="products",
+                filter_conditions=request.filters,
+                use_mmr=True,  # Use MMR for diverse product selection
+                mmr_diversity=0.5,  # High diversity for better 3D spread
+            )
+        except Exception as search_error:
+            logger.warning(f"Vector search failed, falling back to scroll: {search_error}")
+            use_fallback = True
+        
+        # Step 1b: Fallback - scroll products with their existing vectors
+        # This still provides semantic visualization using stored CLIP embeddings
+        if not search_results and use_fallback:
+            logger.info("Using scroll fallback with existing vectors")
+            scrolled_products = qdrant_service.scroll_products(
+                limit=request.limit,
+                with_vectors=True,
+            )
+            
+            if scrolled_products:
+                # Convert scroll results to search-like format
+                search_results = []
+                for product in scrolled_products:
+                    payload = product.get("payload", {})
+                    search_results.append({
+                        "id": product["id"],
+                        "score": 1.0,  # No similarity score in scroll mode
+                        "payload": payload,
+                        "_vector": product.get("vector"),  # Keep vector for later
+                    })
         
         if not search_results:
             raise HTTPException(
@@ -291,6 +319,8 @@ async def get_orbit_view(request: OrbitViewRequest):
         # Step 2: Extract product IDs and build product metadata
         product_ids = [result["id"] for result in search_results]
         product_metadata = {}
+        prefetched_vectors = {}  # Store vectors from scroll fallback
+        
         for result in search_results:
             payload = result.get("payload", {})
             product_metadata[result["id"]] = {
@@ -301,12 +331,19 @@ async def get_orbit_view(request: OrbitViewRequest):
                 "imgUrl": payload.get("image_url") or payload.get("imgUrl"),
                 "similarity_score": result["score"],
             }
+            # Store pre-fetched vector if available (from scroll fallback)
+            if "_vector" in result and result["_vector"]:
+                prefetched_vectors[result["id"]] = result["_vector"]
         
-        # Step 3: Retrieve 512-dimensional vectors from Qdrant
-        vectors_map = qdrant_service.get_product_vectors(
-            product_ids=product_ids,
-            with_vectors=True
-        )
+        # Step 3: Retrieve 512-dimensional vectors from Qdrant (or use prefetched)
+        if prefetched_vectors:
+            vectors_map = prefetched_vectors
+            logger.info(f"Using {len(vectors_map)} pre-fetched vectors from scroll")
+        else:
+            vectors_map = qdrant_service.get_product_vectors(
+                product_ids=product_ids,
+                with_vectors=True
+            )
         
         if not vectors_map:
             raise HTTPException(
