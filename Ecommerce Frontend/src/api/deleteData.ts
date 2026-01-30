@@ -20,7 +20,8 @@ export default async function deleteData<ITableName extends dbTableType>({
     query = query.match(match);
   }
   if (matchInArray) {
-    query = (query as { in: (a: string, b: unknown) => unknown }).in(matchInArray.column as string, matchInArray.in) as typeof query;
+    // @ts-ignore - Supabase type inference issue
+    query = query.in(matchInArray.column as string, matchInArray.in);
   }
   const { error } = await query;
   return { error };

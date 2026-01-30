@@ -1,5 +1,5 @@
 "use client";
-import { createCsrClient } from "@/lib/client.supabase";
+import { createClient } from "@/lib/supabase/client";
 import { dbTableType } from "@/types/database.tables.types";
 import { useEffect } from "react";
 type optionsType = {
@@ -22,7 +22,7 @@ export default function useRealTime({
   event?: "UPDATE" | "INSERT" | "DELETE" | "*";
   onReceive: (payload: any) => void;
 }) {
-  const supabase = createCsrClient();
+  const supabase = createClient();
   const channelName = tableName + "_" + event;
   const filterString = filters?.reduce(
     (acc, e, i) =>
