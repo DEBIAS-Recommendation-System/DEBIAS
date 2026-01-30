@@ -8,6 +8,7 @@ from app.routers import (
     events,
     recommendations,
     behavioral_recommendations,
+    orchestrator,
 )
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -84,6 +85,7 @@ app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(recommendations.router)
 app.include_router(behavioral_recommendations.router)
+app.include_router(orchestrator.router)
 
 
 @app.on_event("startup")
