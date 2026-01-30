@@ -32,11 +32,13 @@ def populate_products(csv_path: Path = CSV_PATH) -> None:
         raise FileNotFoundError(f"CSV not found at {csv_path}")
 
     total_inserted = 0
+    total_processed = 0
     batch: list[dict] = []
 
     with SessionLocal() as db:
         for row in _read_rows(csv_path):
             batch.append(row)
+            total_processed += 1
             if len(batch) >= CHUNK_SIZE:
                 stmt = insert(Product).values(batch)
                 stmt = stmt.on_conflict_do_nothing(index_elements=["product_id"])
@@ -52,7 +54,8 @@ def populate_products(csv_path: Path = CSV_PATH) -> None:
             db.commit()
             total_inserted += result.rowcount or 0
 
-    print(f"Inserted {total_inserted} products from {csv_path}")
+    print(f"Inserted {total_inserted} new products from {csv_path}")
+    print(f"Processed {total_processed} total products ({total_processed - total_inserted} already existed)")
 
 
 if __name__ == "__main__":
