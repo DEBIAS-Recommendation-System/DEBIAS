@@ -262,9 +262,9 @@ DEBIAS leverages **Qdrant** as its high-performance vector database for semantic
 
 | Persona | Username | Password | Description |
 |---------|----------|----------|-------------|
-| 🧵 **Sewing Suzie** | `suzie` | `iloveSewing` | An avid sewing lover |
-| 🧹 **Vacuum Vincent** | `vincent` | `cleanFreak` | A clean freak with an affinity for vacuums |
-| 💻 **Laptop Larry** | `larry` | `obsessedLarry` | Larry just loves to browse laptops, and we love Larry |
+| 🧵 **Sewing Suzie** | `suzie` | `ccpuv89BGC` | An avid sewing lover |
+| 🧹 **Vacuum Vincent** | `vincent9` | `ccpuv89BGC` | A clean freak with an affinity for vacuums |
+| 💻 **Laptop Larry** | `larry` | `ccpuv89BGC` | Larry just loves to browse laptops, and we love Larry |
 | 🔧 **Admin** | `admin` | `admin` | System administrator |
 
 ---
