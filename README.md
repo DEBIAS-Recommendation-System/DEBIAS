@@ -286,7 +286,6 @@ DEBIAS enables:
     <img src="https://img.shields.io/badge/🌐%20Live%20Demo-Try%20DEBIAS-brightgreen?style=for-the-badge" alt="Live Demo" />
   </a>
 </p>
----
 
 ## 👨‍💻 Team
 
